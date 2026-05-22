@@ -16,9 +16,9 @@ Describe 'Get-DefenderDcPolicy' {
         $mandatoryParams.Count | Should -Be 0
     }
 
-    It 'returns a [pscustomobject]' {
+    It 'declares OutputType DefenderDeviceControlUnmanaged.Policy' {
         $cmd = Get-Command Get-DefenderDcPolicy
-        $cmd.OutputType.Type | Should -Contain ([pscustomobject])
+        $cmd.OutputType.Name | Should -Contain 'DefenderDeviceControlUnmanaged.Policy'
     }
 
     It 'has populated comment-based help (SYNOPSIS, DESCRIPTION, >=1 EXAMPLE)' {

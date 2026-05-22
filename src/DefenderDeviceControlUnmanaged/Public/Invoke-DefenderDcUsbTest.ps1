@@ -56,7 +56,7 @@ function Invoke-DefenderDcUsbTest {
     https://lukeevanstech.github.io/defender-device-control-unmanaged/howto/run-end-to-end-test/
 #>
     [CmdletBinding(SupportsShouldProcess = $true)]
-    [OutputType([pscustomobject])]
+    [OutputType('DefenderDeviceControlUnmanaged.UsbTestResult')]
     param(
         [Parameter(Mandatory)]
         [ValidatePattern('^[A-Za-z]:?$')]
@@ -192,6 +192,7 @@ function Invoke-DefenderDcUsbTest {
     }
 
     [pscustomobject]@{
+        PSTypeName     = 'DefenderDeviceControlUnmanaged.UsbTestResult'
         Failures       = $failureRef.Value
         TranscriptPath = $transcript
         StartMode      = $StartMode

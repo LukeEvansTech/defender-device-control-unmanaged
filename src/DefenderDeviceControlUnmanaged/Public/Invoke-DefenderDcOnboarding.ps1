@@ -51,7 +51,7 @@ function Invoke-DefenderDcOnboarding {
     https://lukeevanstech.github.io/defender-device-control-unmanaged/howto/onboard-to-mde/
 #>
     [CmdletBinding(SupportsShouldProcess = $true)]
-    [OutputType([pscustomobject])]
+    [OutputType('DefenderDeviceControlUnmanaged.OnboardingResult')]
     param(
         [string] $OnboardingScript,
 
@@ -208,6 +208,7 @@ function Invoke-DefenderDcOnboarding {
     }
 
     [pscustomobject]@{
+        PSTypeName       = 'DefenderDeviceControlUnmanaged.OnboardingResult'
         SenseStatus      = if ($senseAfter) { $senseAfter.Status }    else { $null }
         SenseStartType   = if ($senseAfter) { $senseAfter.StartType } else { $null }
         OnboardingState  = $obsAfter

@@ -119,12 +119,22 @@ function Set-DefenderDcPolicy {
         Write-Verbose "Groups: $GroupsXmlPath"
         Write-Verbose "Rules:  $RulesXmlPath"
 
-        Read-DcPolicyXml -Path $GroupsXmlPath | Out-Null
-        Read-DcPolicyXml -Path $RulesXmlPath  | Out-Null
-
+        # Use the public Test-DefenderDcPolicyXml validator (which layers BOM /
+        # xml-declaration / PolicyRule.Name-as-child / Options-bitmask checks on
+        # top of Read-DcPolicyXml + MpCmdRun) so a caller-supplied XML faces the
+        # same contract whether they ran Test-DefenderDcPolicyXml first or not.
         if (-not $SkipMpCmdRunValidation) {
-            Test-DcXmlWithMpCmdRun -XmlPath $GroupsXmlPath -Kind Groups
-            Test-DcXmlWithMpCmdRun -XmlPath $RulesXmlPath  -Kind Rules
+            if (-not (Test-DefenderDcPolicyXml -Path $GroupsXmlPath -Kind Groups)) {
+                throw "Set-DefenderDcPolicy: GroupsXmlPath failed validation: $GroupsXmlPath"
+            }
+            if (-not (Test-DefenderDcPolicyXml -Path $RulesXmlPath -Kind Rules)) {
+                throw "Set-DefenderDcPolicy: RulesXmlPath failed validation: $RulesXmlPath"
+            }
+        } else {
+            # Even with -SkipMpCmdRunValidation, run Read-DcPolicyXml so structural
+            # XML faults are caught before we touch HKLM.
+            Read-DcPolicyXml -Path $GroupsXmlPath | Out-Null
+            Read-DcPolicyXml -Path $RulesXmlPath  | Out-Null
         }
 
         $manifest = Get-DcRegistryManifest -GroupsXmlPath $GroupsXmlPath -RulesXmlPath $RulesXmlPath

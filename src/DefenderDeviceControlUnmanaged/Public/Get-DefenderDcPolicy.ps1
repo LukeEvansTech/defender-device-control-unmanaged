@@ -36,7 +36,7 @@ function Get-DefenderDcPolicy {
     https://lukeevanstech.github.io/defender-device-control-unmanaged/
 #>
     [CmdletBinding()]
-    [OutputType([pscustomobject])]
+    [OutputType('DefenderDeviceControlUnmanaged.Policy')]
     param()
 
     Set-StrictMode -Version Latest
@@ -75,6 +75,7 @@ function Get-DefenderDcPolicy {
     }
 
     [pscustomobject]@{
+        PSTypeName                       = 'DefenderDeviceControlUnmanaged.Policy'
         Mode                             = $mode
         FeaturesDeviceControlEnabled     = $feat
         DefaultEnforcement               = $defaultEnforcement
