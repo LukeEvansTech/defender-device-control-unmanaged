@@ -2,8 +2,11 @@ function Get-DcRegistryManifest {
     [CmdletBinding()]
     [OutputType([pscustomobject[]])]
     param(
-        [Parameter(Mandatory)][string] $GroupsXmlPath,
-        [Parameter(Mandatory)][string] $RulesXmlPath
+        [Parameter(Mandatory)]
+        [string] $GroupsXmlPath,
+
+        [Parameter(Mandatory)]
+        [string] $RulesXmlPath
     )
 
     # IsPathRooted is platform-aware: on non-Windows it does not recognize Windows

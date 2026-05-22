@@ -39,7 +39,7 @@ Describe 'Invoke-DefenderDcUsbTest signature' {
 
     It 'throws when invoked non-elevated' {
         InModuleScope DefenderDeviceControlUnmanaged {
-            Mock Test-IsElevated { $false }
+            Mock Test-DcIsElevated { $false }
             { Invoke-DefenderDcUsbTest -Drive E } | Should -Throw -ExpectedMessage '*elevated*'
         }
     }

@@ -38,8 +38,12 @@ function Test-DefenderDcPolicyXml {
     [CmdletBinding()]
     [OutputType([bool])]
     param(
-        [Parameter(Mandatory)][string] $Path,
-        [Parameter(Mandatory)][ValidateSet('Groups','Rules')][string] $Kind
+        [Parameter(Mandatory)]
+        [string] $Path,
+
+        [Parameter(Mandatory)]
+        [ValidateSet('Groups','Rules')]
+        [string] $Kind
     )
 
     Set-StrictMode -Version Latest

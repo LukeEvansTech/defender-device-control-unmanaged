@@ -44,7 +44,7 @@ function Invoke-DefenderDcOnboarding {
       SenseStartType  - 'Automatic' / 'Manual' / etc., or $null
       OnboardingState - 1 when onboarded, 0/null otherwise (HKLM WATP Status)
       OrgId           - tenant OrgId GUID string, or $null
-      Failures        - [int] count of failed post-flight checks
+      Failures        - [int] count of failed pre-flight and post-flight checks
       TranscriptPath  - absolute path to the per-invocation transcript log
 
 .LINK
@@ -62,7 +62,7 @@ function Invoke-DefenderDcOnboarding {
     Set-StrictMode -Version Latest
     $ErrorActionPreference = 'Continue'
 
-    if (-not (Test-IsElevated)) {
+    if (-not (Test-DcIsElevated)) {
         throw "Invoke-DefenderDcOnboarding: must be run from an elevated PowerShell."
     }
 
@@ -193,9 +193,9 @@ function Invoke-DefenderDcOnboarding {
         Write-Host ""
         Write-Host "================================================================" -ForegroundColor Cyan
         if ($failureRef.Value -eq 0) {
-            Write-Host " Invoke-DefenderDcOnboarding: ALL POST-FLIGHT CHECKS PASSED" -ForegroundColor Green
+            Write-Host " Invoke-DefenderDcOnboarding: ALL CHECKS PASSED" -ForegroundColor Green
         } else {
-            Write-Host " Invoke-DefenderDcOnboarding: $($failureRef.Value) POST-FLIGHT CHECKS FAILED" -ForegroundColor Red
+            Write-Host " Invoke-DefenderDcOnboarding: $($failureRef.Value) CHECKS FAILED" -ForegroundColor Red
         }
         Write-Host " Transcript: $transcript" -ForegroundColor Cyan
         Write-Host "================================================================" -ForegroundColor Cyan

@@ -42,9 +42,9 @@ Describe 'Set-DefenderDcPolicy' {
         $cmd.Parameters.ContainsKey('SkipGpUpdate') | Should -BeTrue
     }
 
-    It 'throws when invoked non-elevated (mocked Test-IsElevated returns false)' {
+    It 'throws when invoked non-elevated (mocked Test-DcIsElevated returns false)' {
         InModuleScope DefenderDeviceControlUnmanaged {
-            Mock Test-IsElevated { $false }
+            Mock Test-DcIsElevated { $false }
             { Set-DefenderDcPolicy -Mode Audit -WhatIf } | Should -Throw -ExpectedMessage '*elevated*'
         }
     }
@@ -59,7 +59,7 @@ Describe 'Set-DefenderDcPolicy' {
     Context 'Mode=Off branch (under elevation, mocked)' {
         It 'calls Remove-DcPolicy and skips XML/manifest pipeline' {
             InModuleScope DefenderDeviceControlUnmanaged {
-                Mock Test-IsElevated { $true }
+                Mock Test-DcIsElevated { $true }
                 Mock Get-DcComputerStatus { [pscustomobject]@{ AMServiceEnabled = $true; AMEngineVersion = '0.0'; IsTamperProtected = $false } }
                 Mock Remove-DcPolicy { }
                 Mock Start-DcTranscript { '/tmp/fake.transcript.txt' }
@@ -83,7 +83,7 @@ Describe 'Set-DefenderDcPolicy' {
     Context 'Apply branch with custom XML paths (under elevation, mocked)' {
         It 'validates + writes the manifest in order' {
             InModuleScope DefenderDeviceControlUnmanaged {
-                Mock Test-IsElevated { $true }
+                Mock Test-DcIsElevated { $true }
                 Mock Get-DcComputerStatus { [pscustomobject]@{ AMServiceEnabled = $true; AMEngineVersion = '0.0'; IsTamperProtected = $false } }
                 Mock Test-Path { $true } -ParameterFilter { $LiteralPath -like '*.xml' }
                 Mock Test-DefenderDcPolicyXml { $true }
@@ -109,7 +109,7 @@ Describe 'Set-DefenderDcPolicy' {
 
         It '-SkipMpCmdRunValidation falls back to a parse-only Read-DcPolicyXml check' {
             InModuleScope DefenderDeviceControlUnmanaged {
-                Mock Test-IsElevated { $true }
+                Mock Test-DcIsElevated { $true }
                 Mock Get-DcComputerStatus { [pscustomobject]@{ AMServiceEnabled = $true; AMEngineVersion = '0.0'; IsTamperProtected = $false } }
                 Mock Test-Path { $true } -ParameterFilter { $LiteralPath -like '*.xml' }
                 Mock Test-DefenderDcPolicyXml { $true }
@@ -131,7 +131,7 @@ Describe 'Set-DefenderDcPolicy' {
 
         It 'throws when Test-DefenderDcPolicyXml returns false' {
             InModuleScope DefenderDeviceControlUnmanaged {
-                Mock Test-IsElevated { $true }
+                Mock Test-DcIsElevated { $true }
                 Mock Get-DcComputerStatus { [pscustomobject]@{ AMServiceEnabled = $true; AMEngineVersion = '0.0'; IsTamperProtected = $false } }
                 Mock Test-Path { $true } -ParameterFilter { $LiteralPath -like '*.xml' }
                 Mock Test-DefenderDcPolicyXml { $false }
@@ -152,7 +152,7 @@ Describe 'Set-DefenderDcPolicy' {
 
         It 'throws when Defender AM service is not enabled' {
             InModuleScope DefenderDeviceControlUnmanaged {
-                Mock Test-IsElevated { $true }
+                Mock Test-DcIsElevated { $true }
                 Mock Get-DcComputerStatus { [pscustomobject]@{ AMServiceEnabled = $false } }
                 Mock Start-DcTranscript { '/tmp/fake.transcript.txt' }
                 Mock Stop-Transcript { }

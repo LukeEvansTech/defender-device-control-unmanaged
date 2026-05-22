@@ -1,4 +1,4 @@
-function Test-IsElevated {
+function Test-DcIsElevated {
     [CmdletBinding()]
     [OutputType([bool])]
     param()

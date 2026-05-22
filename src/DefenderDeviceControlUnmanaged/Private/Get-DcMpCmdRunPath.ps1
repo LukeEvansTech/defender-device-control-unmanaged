@@ -1,4 +1,4 @@
-function Get-DefenderMpCmdRun {
+function Get-DcMpCmdRunPath {
     [CmdletBinding()]
     [OutputType([string])]
     param()

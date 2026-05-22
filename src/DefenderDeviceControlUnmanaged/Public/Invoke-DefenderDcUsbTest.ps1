@@ -72,7 +72,7 @@ function Invoke-DefenderDcUsbTest {
     Set-StrictMode -Version Latest
     $ErrorActionPreference = 'Continue'
 
-    if (-not (Test-IsElevated)) {
+    if (-not (Test-DcIsElevated)) {
         throw "Invoke-DefenderDcUsbTest: must be run from an elevated PowerShell."
     }
 

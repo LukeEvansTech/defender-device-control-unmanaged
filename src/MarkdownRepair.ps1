@@ -81,10 +81,7 @@ function Add-MissingCommonParameterToMarkdown {
                 $CommonParameters = @()
                 foreach ($CommonParameter in $Params) {
                     if ($CommonParameter.StartsWith('-')) {
-                        if ($CommonParameter.EndsWith(',')) {
-                            $CleanParam = $CommonParameter.Substring(0, $CommonParameter.Length - 1)
-                        }
-                        elseif ($CommonParameter.EndsWith('.')) {
+                        if ($CommonParameter.EndsWith(',') -or $CommonParameter.EndsWith('.')) {
                             $CleanParam = $CommonParameter.Substring(0, $CommonParameter.Length - 1)
                         }
                         else {

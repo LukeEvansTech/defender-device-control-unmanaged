@@ -3,7 +3,7 @@ BeforeAll {
     Import-Module (Join-Path $ModuleRoot 'DefenderDeviceControlUnmanaged.psd1') -Force
 }
 
-Describe 'Get-DefenderMpCmdRun (MpCmdRun.exe discovery)' {
+Describe 'Get-DcMpCmdRunPath (MpCmdRun.exe discovery)' {
     Context 'when registry InstallLocation points at a real MpCmdRun.exe' {
         It 'returns the registry path' {
             InModuleScope DefenderDeviceControlUnmanaged {
@@ -14,7 +14,7 @@ Describe 'Get-DefenderMpCmdRun (MpCmdRun.exe discovery)' {
                 Mock Test-Path { $true } -ParameterFilter { $LiteralPath -like '*MpCmdRun.exe' }
                 Mock Get-ChildItem { } # should not be reached
 
-                $result = Get-DefenderMpCmdRun
+                $result = Get-DcMpCmdRunPath
 
                 $result | Should -BeLike '*MpCmdRun.exe'
                 Should -Invoke Get-ChildItem -Times 0 -Exactly
@@ -36,7 +36,7 @@ Describe 'Get-DefenderMpCmdRun (MpCmdRun.exe discovery)' {
                     )
                 }
 
-                $result = Get-DefenderMpCmdRun
+                $result = Get-DcMpCmdRunPath
 
                 $result | Should -Be '/fake/Platform/4.18.100/MpCmdRun.exe'
             }
@@ -50,7 +50,7 @@ Describe 'Get-DefenderMpCmdRun (MpCmdRun.exe discovery)' {
                 Mock Test-Path { $false }
                 Mock Get-ChildItem { $null }
 
-                $result = Get-DefenderMpCmdRun
+                $result = Get-DcMpCmdRunPath
 
                 $result | Should -BeNullOrEmpty
             }
@@ -64,8 +64,8 @@ Describe 'Get-DefenderMpCmdRun (MpCmdRun.exe discovery)' {
                 Mock Test-Path { $false }
                 Mock Get-ChildItem { @() }
 
-                { Get-DefenderMpCmdRun } | Should -Not -Throw
-                Get-DefenderMpCmdRun | Should -BeNullOrEmpty
+                { Get-DcMpCmdRunPath } | Should -Not -Throw
+                Get-DcMpCmdRunPath | Should -BeNullOrEmpty
             }
         }
     }

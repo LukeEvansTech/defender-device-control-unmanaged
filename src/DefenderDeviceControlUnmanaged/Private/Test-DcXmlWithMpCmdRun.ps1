@@ -2,11 +2,15 @@ function Test-DcXmlWithMpCmdRun {
     [CmdletBinding()]
     [OutputType([void])]
     param(
-        [Parameter(Mandatory)][string]$XmlPath,
-        [ValidateSet('Groups','Rules')][Parameter(Mandatory)][string]$Kind
+        [Parameter(Mandatory)]
+        [string] $XmlPath,
+
+        [Parameter(Mandatory)]
+        [ValidateSet('Groups','Rules')]
+        [string] $Kind
     )
 
-    $exe = Get-DefenderMpCmdRun
+    $exe = Get-DcMpCmdRunPath
     if (-not $exe) {
         Write-Warning "  MpCmdRun.exe not found - skipping engine-side validation of $XmlPath."
         return

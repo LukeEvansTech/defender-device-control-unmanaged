@@ -49,9 +49,9 @@ function Test-DefenderDcPolicy {
             -not (Test-Path -LiteralPath $script:DcRoot)
         } "$script:DcRoot should not exist" $failureRef
 
-        $featProp = Get-ItemProperty -LiteralPath $script:DcFeatures -Name DeviceControlEnabled -ErrorAction SilentlyContinue
+        $featVal = Get-DcRegistryValue -Path $script:DcFeatures -Name DeviceControlEnabled
         Write-DcCheckResult 'Features\DeviceControlEnabled absent or 0' {
-            $null -eq $featProp -or $featProp.DeviceControlEnabled -eq 0
+            $null -eq $featVal -or $featVal -eq 0
         } 'Features\DeviceControlEnabled must be 0 or absent' $failureRef
 
         Write-DcCheckResult 'Engine reports DeviceControlState=Disabled' {
@@ -61,59 +61,54 @@ function Test-DefenderDcPolicy {
 
     } else {
 
+        $featVal     = Get-DcRegistryValue -Path $script:DcFeatures -Name DeviceControlEnabled
+        $defEnf      = Get-DcRegistryValue -Path $script:DcRoot     -Name DefaultEnforcement
+        $secured     = Get-DcRegistryValue -Path $script:DcRoot     -Name SecuredDevicesConfiguration
+        $groupsXml   = Get-DcRegistryValue -Path $script:DcGroupsKey -Name PolicyGroups
+        $rulesXml    = Get-DcRegistryValue -Path $script:DcRulesKey  -Name PolicyRules
+
         Write-DcCheckResult 'Features\DeviceControlEnabled = 1' {
-            $p = Get-ItemProperty -LiteralPath $script:DcFeatures -Name DeviceControlEnabled -ErrorAction SilentlyContinue
-            $null -ne $p -and $p.DeviceControlEnabled -eq 1
+            $featVal -eq 1
         } 'must be 1' $failureRef
 
         Write-DcCheckResult 'Device Control\DefaultEnforcement = 1 (Allow)' {
-            $p = Get-ItemProperty -LiteralPath $script:DcRoot -Name DefaultEnforcement -ErrorAction SilentlyContinue
-            $null -ne $p -and $p.DefaultEnforcement -eq 1
+            $defEnf -eq 1
         } 'must be 1' $failureRef
 
         Write-DcCheckResult 'SecuredDevicesConfiguration scopes Removable + CdRom + Wpd' {
-            $p = Get-ItemProperty -LiteralPath $script:DcRoot -Name SecuredDevicesConfiguration -ErrorAction SilentlyContinue
-            $null -ne $p -and $p.SecuredDevicesConfiguration -eq 'RemovableMediaDevices|CdRomDevices|WpdDevices'
+            $secured -eq 'RemovableMediaDevices|CdRomDevices|WpdDevices'
         } 'must be exactly "RemovableMediaDevices|CdRomDevices|WpdDevices"' $failureRef
 
-        $groupsRegVal = $null
-        $groupsRef = [ref]$groupsRegVal
         Write-DcCheckResult 'Policy Groups\PolicyGroups REG_SZ exists' {
-            $p = Get-ItemProperty -LiteralPath $script:DcGroupsKey -Name PolicyGroups -ErrorAction SilentlyContinue
-            $groupsRef.Value = if ($null -ne $p) { $p.PolicyGroups } else { $null }
-            $null -ne $groupsRef.Value -and $groupsRef.Value -ne ''
+            -not [string]::IsNullOrEmpty($groupsXml)
         } 'must be a non-empty string' $failureRef
 
         Write-DcCheckResult 'Policy Groups XML file exists at registered path' {
-            $null -ne $groupsRef.Value -and (Test-Path -LiteralPath $groupsRef.Value -PathType Leaf)
+            -not [string]::IsNullOrEmpty($groupsXml) -and (Test-Path -LiteralPath $groupsXml -PathType Leaf)
         } 'file at the registered path must exist' $failureRef
 
         Write-DcCheckResult 'Policy Groups XML parses as 3 Group records' {
-            if ($null -eq $groupsRef.Value -or -not (Test-Path -LiteralPath $groupsRef.Value -PathType Leaf)) { return $false }
-            @(Read-DcPolicyXml -Path $groupsRef.Value).Count -eq 3
+            if ([string]::IsNullOrEmpty($groupsXml) -or -not (Test-Path -LiteralPath $groupsXml -PathType Leaf)) { return $false }
+            @(Read-DcPolicyXml -Path $groupsXml).Count -eq 3
         } 'must contain exactly 3 <Group> elements' $failureRef
 
-        $rulesRegVal = $null
-        $rulesRef = [ref]$rulesRegVal
         Write-DcCheckResult 'Policy Rules\PolicyRules REG_SZ exists' {
-            $p = Get-ItemProperty -LiteralPath $script:DcRulesKey -Name PolicyRules -ErrorAction SilentlyContinue
-            $rulesRef.Value = if ($null -ne $p) { $p.PolicyRules } else { $null }
-            $null -ne $rulesRef.Value -and $rulesRef.Value -ne ''
+            -not [string]::IsNullOrEmpty($rulesXml)
         } 'must be a non-empty string' $failureRef
 
         Write-DcCheckResult 'Policy Rules XML file exists at registered path' {
-            $null -ne $rulesRef.Value -and (Test-Path -LiteralPath $rulesRef.Value -PathType Leaf)
+            -not [string]::IsNullOrEmpty($rulesXml) -and (Test-Path -LiteralPath $rulesXml -PathType Leaf)
         } 'file at the registered path must exist' $failureRef
 
         Write-DcCheckResult 'Policy Rules XML parses as 3 PolicyRule records' {
-            if ($null -eq $rulesRef.Value -or -not (Test-Path -LiteralPath $rulesRef.Value -PathType Leaf)) { return $false }
-            @(Read-DcPolicyXml -Path $rulesRef.Value).Count -eq 3
+            if ([string]::IsNullOrEmpty($rulesXml) -or -not (Test-Path -LiteralPath $rulesXml -PathType Leaf)) { return $false }
+            @(Read-DcPolicyXml -Path $rulesXml).Count -eq 3
         } 'must contain exactly 3 <PolicyRule> elements' $failureRef
 
         $expectedType = if ($ExpectMode -eq 'Audit') { 'AuditAllowed' } else { 'Deny' }
         Write-DcCheckResult "Rules XML uses Entry Type=$expectedType (matches ExpectMode)" {
-            if ($null -eq $rulesRef.Value -or -not (Test-Path -LiteralPath $rulesRef.Value -PathType Leaf)) { return $false }
-            foreach ($r in (Read-DcPolicyXml -Path $rulesRef.Value)) {
+            if ([string]::IsNullOrEmpty($rulesXml) -or -not (Test-Path -LiteralPath $rulesXml -PathType Leaf)) { return $false }
+            foreach ($r in (Read-DcPolicyXml -Path $rulesXml)) {
                 if ($r.EntryTypes -notcontains $expectedType) { return $false }
             }
             $true

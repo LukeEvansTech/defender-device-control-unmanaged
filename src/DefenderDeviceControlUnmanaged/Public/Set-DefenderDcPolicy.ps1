@@ -78,12 +78,19 @@ function Set-DefenderDcPolicy {
     Set-StrictMode -Version Latest
     $ErrorActionPreference = 'Stop'
 
-    if (-not (Test-IsElevated)) { throw "Set-DefenderDcPolicy: must be run elevated." }
+    if (-not (Test-DcIsElevated)) { throw "Set-DefenderDcPolicy: must be run elevated." }
 
     $transcript = Start-DcTranscript -CmdletName 'Set-DefenderDcPolicy'
     try {
         try { $defender = Get-DcComputerStatus } catch {
-            throw "Set-DefenderDcPolicy: Get-MpComputerStatus failed: $($_.Exception.Message)"
+            # Wrap the original ErrorRecord so the caller still has the typed exception + stack trace.
+            throw [System.Management.Automation.ErrorRecord]::new(
+                [System.InvalidOperationException]::new(
+                    "Set-DefenderDcPolicy: Get-MpComputerStatus failed: $($_.Exception.Message)",
+                    $_.Exception),
+                'DefenderDeviceControlUnmanaged.DefenderQueryFailed',
+                [System.Management.Automation.ErrorCategory]::ResourceUnavailable,
+                $null)
         }
         if (-not $defender.AMServiceEnabled) { throw "Set-DefenderDcPolicy: Defender service not enabled." }
         Write-Verbose "Defender AM engine $($defender.AMEngineVersion), TamperProtection=$($defender.IsTamperProtected)"
@@ -101,14 +108,10 @@ function Set-DefenderDcPolicy {
         }
 
         $defaultPolicyDir = Join-Path $PSScriptRoot '..\policy'
-        if (-not $GroupsXmlPath) { $GroupsXmlPath = [System.IO.Path]::GetFullPath((Join-Path $defaultPolicyDir 'PolicyGroups.xml')) }
-        if (-not $RulesXmlPath)  { $RulesXmlPath  = [System.IO.Path]::GetFullPath((Join-Path $defaultPolicyDir "PolicyRules.$Mode.xml")) }
-        if (-not [System.IO.Path]::IsPathRooted($GroupsXmlPath)) {
-            $GroupsXmlPath = [System.IO.Path]::GetFullPath($GroupsXmlPath)
-        }
-        if (-not [System.IO.Path]::IsPathRooted($RulesXmlPath)) {
-            $RulesXmlPath = [System.IO.Path]::GetFullPath($RulesXmlPath)
-        }
+        if (-not $GroupsXmlPath) { $GroupsXmlPath = Join-Path $defaultPolicyDir 'PolicyGroups.xml' }
+        if (-not $RulesXmlPath)  { $RulesXmlPath  = Join-Path $defaultPolicyDir "PolicyRules.$Mode.xml" }
+        $GroupsXmlPath = [System.IO.Path]::GetFullPath($GroupsXmlPath)
+        $RulesXmlPath  = [System.IO.Path]::GetFullPath($RulesXmlPath)
 
         foreach ($p in $GroupsXmlPath, $RulesXmlPath) {
             if (-not (Test-Path -LiteralPath $p -PathType Leaf)) {

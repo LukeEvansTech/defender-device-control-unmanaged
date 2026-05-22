@@ -42,7 +42,7 @@ Describe 'Invoke-DefenderDcOnboarding signature' {
 
     It 'throws when invoked non-elevated' {
         InModuleScope DefenderDeviceControlUnmanaged {
-            Mock Test-IsElevated { $false }
+            Mock Test-DcIsElevated { $false }
             { Invoke-DefenderDcOnboarding } | Should -Throw -ExpectedMessage '*elevated*'
         }
     }
@@ -57,7 +57,7 @@ Describe 'Invoke-DefenderDcOnboarding pre-flight' {
     Context 'when the box is already onboarded (Sense Running + OnboardingState 1)' {
         It 'throws before invoking the onboarding script' {
             InModuleScope DefenderDeviceControlUnmanaged {
-                Mock Test-IsElevated { $true }
+                Mock Test-DcIsElevated { $true }
                 Mock Start-DcTranscript { '/tmp/fake.transcript.txt' }
                 Mock Stop-Transcript { }
                 Mock Get-DcComputerStatus {
