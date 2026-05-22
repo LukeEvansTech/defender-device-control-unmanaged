@@ -7,7 +7,18 @@ under `HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\`. This
 module writes those values directly -- the same values GPMC would push
 under the hood -- without requiring any management infrastructure.
 
-![5-write registry surface](../media/diagrams/D2-registry-surface.svg)
+```mermaid
+flowchart TD
+    A["HKLM\\SOFTWARE\\Policies\\Microsoft\\Windows Defender"] --> B[Device Control]
+    A --> C[Features]
+    B --> D["DefaultEnforcement = 1 (Allow)<br/>SecuredDevicesConfiguration"]
+    B --> E[Policy Groups]
+    B --> F[Policy Rules]
+    E --> G["PolicyGroups REG_SZ<br/>path to PolicyGroups.xml"]
+    F --> H["PolicyRules REG_SZ<br/>path to PolicyRules.Mode.xml"]
+    C --> I["<b>DeviceControlEnabled = 1</b><br/><i>written LAST</i>"]
+    style I fill:#0066cc,color:#fff,stroke:#003366,stroke-width:3px
+```
 
 ## The five values
 

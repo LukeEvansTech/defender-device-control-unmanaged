@@ -5,62 +5,63 @@ on:
     branches: [main]
     paths:
       - 'docs/**'
-      - 'mkdocs.yml'
       - '.github/workflows/ddcu-deploy-docs.yml'
   pull_request:
     paths:
       - 'docs/**'
-      - 'mkdocs.yml'
       - '.github/workflows/ddcu-deploy-docs.yml'
   workflow_dispatch:
 
 permissions:
   contents: read
 
+concurrency:
+  group: pages
+  cancel-in-progress: true
+
 jobs:
-  build-check:
-    if: github.event_name == 'pull_request'
+  build:
     runs-on: ubuntu-latest
     steps:
       - name: Checkout
         uses: actions/checkout@v4
         with:
+          fetch-depth: 0
           persist-credentials: false
 
       - name: Set up Python
         uses: actions/setup-python@v5
         with:
           python-version: '3.12'
+          cache: 'pip'
 
-      - name: Install docs dependencies
+      - name: Install Zensical
         run: |
           python -m pip install --upgrade pip
           pip install -r docs/requirements.txt
 
-      - name: Build (strict, no deploy)
-        run: mkdocs build --strict
+      - name: Build with Zensical
+        run: |
+          cd docs
+          zensical build
+
+      - name: Upload Pages artifact
+        if: github.event_name != 'pull_request'
+        uses: actions/upload-pages-artifact@v3
+        with:
+          path: ./docs/site
 
   deploy:
     if: github.event_name != 'pull_request'
+    needs: build
     runs-on: ubuntu-latest
     permissions:
-      contents: write
+      pages: write
+      id-token: write
+    environment:
+      name: github-pages
+      url: ${{ steps.deployment.outputs.page_url }}
     steps:
-      - name: Checkout
-        uses: actions/checkout@v4
-        with:
-          fetch-depth: 0
-          persist-credentials: true
-
-      - name: Set up Python
-        uses: actions/setup-python@v5
-        with:
-          python-version: '3.12'
-
-      - name: Install docs dependencies
-        run: |
-          python -m pip install --upgrade pip
-          pip install -r docs/requirements.txt
-
-      - name: Build and deploy
-        run: mkdocs gh-deploy --force --clean
+      - name: Deploy to GitHub Pages
+        id: deployment
+        uses: actions/deploy-pages@v4

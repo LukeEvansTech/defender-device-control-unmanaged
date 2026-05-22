@@ -14,7 +14,17 @@ engine. The engine checks three conditions before it transitions
 
 ## The three activation conditions
 
-![MDE attach gate decision flow](../media/diagrams/D3-mde-attach-gate.svg)
+```mermaid
+flowchart TD
+    A[Box has<br/>MDE license] --> B{Get-Service Sense<br/>= Running?}
+    B -->|No| Z1[Not onboarded.<br/>Run Invoke-DefenderDcOnboarding]
+    B -->|Yes| C{OnboardingState = 1?}
+    C -->|No| Z2[Partial onboarding.<br/>Check script logs]
+    C -->|Yes| D{OrgId populated?}
+    D -->|No| Z3[Tenant attach incomplete]
+    D -->|Yes| E[Engine activates<br/>DeviceControlState != Disabled<br/>once policy applied]
+    style E fill:#0a8a3a,color:#fff,stroke:#054a1f,stroke-width:3px
+```
 
 | Condition | How to check | Expected value |
 |-----------|-------------|----------------|

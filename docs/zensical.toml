@@ -27,6 +27,7 @@ extra_javascript = [
 nav = [
   { "Home" = "index.md" },
   { "Why this exists" = "why.md" },
+  { "Engineer runbook" = "runbook.md" },
   { "Quickstart" = [
     { "Install" = "quickstart/install.md" },
     { "Audit mode" = "quickstart/audit-mode.md" },

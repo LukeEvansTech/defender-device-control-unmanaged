@@ -22,3 +22,6 @@ Thumbs.db
 *.nupkg
 node_modules/
 reddit_secrets.json
+
+# Zensical build output
+docs/site/

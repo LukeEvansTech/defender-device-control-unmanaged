@@ -6,7 +6,21 @@ same Groups XML. The only difference is in the Rules XML: Audit registers
 The registry surface is identical in both modes; the behaviour diverges
 entirely because of what is inside those files.
 
-![Audit vs Enforce comparison](../media/diagrams/D4-audit-vs-enforce.svg)
+```mermaid
+flowchart LR
+    subgraph Audit["Audit mode"]
+        A1["Entry Type:<br/>AuditAllowed"]
+        A2["Options: 2"]
+        A3["Behaviour:<br/>logs, allows write"]
+    end
+    subgraph Enforce["Enforce mode"]
+        E1["Entry Type:<br/>Deny + AuditDenied"]
+        E2["Options: 0 / 3"]
+        E3["Behaviour:<br/>blocks write, logs"]
+    end
+    style Audit fill:#fff4d6,stroke:#a87f00
+    style Enforce fill:#fde0e0,stroke:#a02020
+```
 
 ## Same 5 registry writes
 

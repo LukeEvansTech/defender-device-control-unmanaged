@@ -6,7 +6,23 @@ to target a different device class, apply a different access mask, or carve out 
 specific device by hardware ID. This page shows the full workflow for extending the
 shipped XML pair with a new group and rule.
 
-![Apply lifecycle](../media/diagrams/D5-apply-lifecycle.svg)
+```mermaid
+sequenceDiagram
+    participant User
+    participant Cmdlet as Set-DefenderDcPolicy
+    participant Validator as MpCmdRun.exe
+    participant Registry as HKLM Registry
+    participant Engine as Defender Engine
+
+    User->>Cmdlet: Set-DefenderDcPolicy -Mode Audit
+    Cmdlet->>Validator: TestPolicyXml Groups + Rules
+    Validator-->>Cmdlet: exit 0 (OK)
+    Cmdlet->>Registry: Write 5 values<br/>(DeviceControlEnabled LAST)
+    Note over Registry: Auto-rollback on any mid-write failure
+    Cmdlet->>Engine: gpupdate /force
+    Engine->>Registry: re-read policy
+    Engine-->>User: DeviceControlState = Audit
+```
 
 ---
 

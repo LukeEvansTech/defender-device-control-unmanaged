@@ -8,7 +8,15 @@
 
 Microsoft's own documentation for Defender Device Control assumes you deploy via Intune CSP, domain GPO (GPMC), or Configuration Manager. The canonical local GPO registry surface - what GPMC would push under the hood - is buried in `WindowsDefender.admx` and never explained as a deployable path. **This module is that path:** one cmdlet, MDE-onboarded box, policy applied.
 
-![Deployment-method matrix](docs/media/diagrams/D1-deployment-methods.svg)
+```mermaid
+flowchart LR
+    A[Microsoft Defender<br/>Device Control] --> B{Deployment method}
+    B -->|Managed| C[Intune CSP]
+    B -->|Managed| D[Domain GPO<br/>via GPMC]
+    B -->|Managed| E[Configuration<br/>Manager]
+    B -->|Unmanaged| F["<b>Local GPO Registry</b><br/><i>this module</i>"]
+    style F fill:#0066cc,color:#fff,stroke:#003366,stroke-width:3px
+```
 
 ## 60-second install
 
