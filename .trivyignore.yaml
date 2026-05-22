@@ -1,0 +1,9 @@
+# Trivy ignore file. Per-finding suppressions live here.
+# Format: https://aquasecurity.github.io/trivy/latest/docs/configuration/filtering/
+#
+# Empty for v1 - add entries as Trivy findings are triaged.
+
+vulnerabilities: []
+misconfigurations: []
+secrets: []
+licenses: []
