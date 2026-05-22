@@ -1,0 +1,53 @@
+<PolicyRules>
+  <PolicyRule Id="{77d21842-eba0-44a7-a46a-1c0291b087e0}">
+    <Name>Deny write+execute on removable storage</Name>
+    <IncludedIdList>
+      <GroupId>{18c18655-7803-4235-a811-3da676a1f197}</GroupId>
+    </IncludedIdList>
+    <ExcludedIdList></ExcludedIdList>
+    <Entry Id="{f02a2942-2316-4a99-a2bb-f93ad66cec23}">
+      <Type>Deny</Type>
+      <Options>0</Options>
+      <AccessMask>6</AccessMask>
+    </Entry>
+    <Entry Id="{f57c874b-4c4d-4ef6-8bfa-a824c4959cc2}">
+      <Type>AuditDenied</Type>
+      <Options>3</Options>
+      <AccessMask>6</AccessMask>
+    </Entry>
+  </PolicyRule>
+  <PolicyRule Id="{d1a03385-6742-4f39-b05f-7f7f5c5bee1e}">
+    <Name>Deny write+execute on WPD</Name>
+    <IncludedIdList>
+      <GroupId>{b9854cf9-b7e3-4155-b0ec-5031d44657b3}</GroupId>
+    </IncludedIdList>
+    <ExcludedIdList></ExcludedIdList>
+    <Entry Id="{daf45292-2d46-4dc8-8304-bcfc1919b981}">
+      <Type>Deny</Type>
+      <Options>0</Options>
+      <AccessMask>48</AccessMask>
+    </Entry>
+    <Entry Id="{8b6aaf1f-0ddc-4b78-8bcb-6dd0f317bfbb}">
+      <Type>AuditDenied</Type>
+      <Options>3</Options>
+      <AccessMask>48</AccessMask>
+    </Entry>
+  </PolicyRule>
+  <PolicyRule Id="{f3c3878f-3133-4b5a-83e8-4b4b79c35591}">
+    <Name>Deny write on optical</Name>
+    <IncludedIdList>
+      <GroupId>{c145b8d2-2799-469b-8014-927e7dd9babf}</GroupId>
+    </IncludedIdList>
+    <ExcludedIdList></ExcludedIdList>
+    <Entry Id="{7192cd3a-4a2f-4edf-b1d6-8d98b0f390b4}">
+      <Type>Deny</Type>
+      <Options>0</Options>
+      <AccessMask>2</AccessMask>
+    </Entry>
+    <Entry Id="{96e8501e-3774-4a9f-bdbf-7fac062f128f}">
+      <Type>AuditDenied</Type>
+      <Options>3</Options>
+      <AccessMask>2</AccessMask>
+    </Entry>
+  </PolicyRule>
+</PolicyRules>

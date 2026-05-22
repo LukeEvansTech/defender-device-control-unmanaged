@@ -1,0 +1,10 @@
+<?xml version="1.0" encoding="utf-8"?>
+<Groups>
+  <Group Id="{18c18655-7803-4235-a811-3da676a1f197}" Type="Device">
+    <Name>Removable storage</Name>
+    <MatchType>MatchAny</MatchType>
+    <DescriptorIdList>
+      <PrimaryId>RemovableMediaDevices</PrimaryId>
+    </DescriptorIdList>
+  </Group>
+</Groups>

@@ -1,0 +1,13 @@
+<PolicyRules>
+  <PolicyRule Id="{77d21842-eba0-44a7-a46a-1c0291b087e0}" Name="Wrong location for Name">
+    <IncludedIdList>
+      <GroupId>{18c18655-7803-4235-a811-3da676a1f197}</GroupId>
+    </IncludedIdList>
+    <ExcludedIdList></ExcludedIdList>
+    <Entry Id="{f02a2942-2316-4a99-a2bb-f93ad66cec23}">
+      <Type>Deny</Type>
+      <Options>0</Options>
+      <AccessMask>6</AccessMask>
+    </Entry>
+  </PolicyRule>
+</PolicyRules>

@@ -1,0 +1,78 @@
+BeforeAll {
+    $script:ModuleManifest = Join-Path $PSScriptRoot '..\..\DefenderDeviceControlUnmanaged\DefenderDeviceControlUnmanaged.psd1'
+    Import-Module $ModuleManifest -Force
+    $script:Fixtures = Join-Path $PSScriptRoot 'fixtures'
+}
+
+AfterAll {
+    Remove-Module DefenderDeviceControlUnmanaged -Force -ErrorAction SilentlyContinue
+}
+
+Describe 'Test-DefenderDcPolicyXml' {
+
+    BeforeAll {
+        # Mock the engine-side validator so CI doesn't require MpCmdRun.exe.
+        # The mock just no-ops, which simulates "engine validation passed".
+        InModuleScope DefenderDeviceControlUnmanaged {
+            Mock Test-DcXmlWithMpCmdRun {}
+        }
+    }
+
+    It 'has -Path and -Kind parameters; -Kind ValidateSet Groups|Rules' {
+        $cmd = Get-Command Test-DefenderDcPolicyXml
+        $cmd.Parameters.ContainsKey('Path') | Should -BeTrue
+        $cmd.Parameters.ContainsKey('Kind') | Should -BeTrue
+        $kindVS = $cmd.Parameters['Kind'].Attributes | Where-Object { $_ -is [System.Management.Automation.ValidateSetAttribute] }
+        $kindVS.ValidValues | Sort-Object | Should -Be @('Groups','Rules')
+    }
+
+    It 'returns boolean' {
+        $cmd = Get-Command Test-DefenderDcPolicyXml
+        $cmd.OutputType.Type | Should -Contain ([bool])
+    }
+
+    It 'returns $true on the good Groups fixture' {
+        Test-DefenderDcPolicyXml -Path (Join-Path $Fixtures 'good-Groups.xml') -Kind Groups | Should -BeTrue
+    }
+
+    It 'returns $true on the good Rules fixture' {
+        Test-DefenderDcPolicyXml -Path (Join-Path $Fixtures 'good-Rules.xml') -Kind Rules | Should -BeTrue
+    }
+
+    It 'fails with a BOM-specific error on bad-bom-Groups.xml' {
+        $result = Test-DefenderDcPolicyXml -Path (Join-Path $Fixtures 'bad-bom-Groups.xml') -Kind Groups -ErrorVariable err -ErrorAction SilentlyContinue
+        $result | Should -BeFalse
+        ($err -join ' ') | Should -Match 'BOM'
+    }
+
+    It 'fails with an xml-declaration-specific error on bad-xmldecl-Groups.xml' {
+        $result = Test-DefenderDcPolicyXml -Path (Join-Path $Fixtures 'bad-xmldecl-Groups.xml') -Kind Groups -ErrorVariable err -ErrorAction SilentlyContinue
+        $result | Should -BeFalse
+        ($err -join ' ') | Should -Match 'xml declaration|<\?xml'
+    }
+
+    It 'fails with a Name-attribute-specific error on bad-name-attr-Rules.xml' {
+        $result = Test-DefenderDcPolicyXml -Path (Join-Path $Fixtures 'bad-name-attr-Rules.xml') -Kind Rules -ErrorVariable err -ErrorAction SilentlyContinue
+        $result | Should -BeFalse
+        ($err -join ' ') | Should -Match 'Name.*attribute|Name.*child'
+    }
+
+    It 'fails with an Options-out-of-range error on bad-options-4-Rules.xml' {
+        $result = Test-DefenderDcPolicyXml -Path (Join-Path $Fixtures 'bad-options-4-Rules.xml') -Kind Rules -ErrorVariable err -ErrorAction SilentlyContinue
+        $result | Should -BeFalse
+        ($err -join ' ') | Should -Match 'Options.*[0-3]|Options.*bitmask|2-bit'
+    }
+
+    It 'fails when file does not exist' {
+        $result = Test-DefenderDcPolicyXml -Path 'C:\does-not-exist.xml' -Kind Groups -ErrorVariable err -ErrorAction SilentlyContinue
+        $result | Should -BeFalse
+        ($err -join ' ') | Should -Match 'not found'
+    }
+
+    It 'has populated comment-based help (SYNOPSIS, DESCRIPTION, >=1 EXAMPLE)' {
+        $help = Get-Help Test-DefenderDcPolicyXml -Full
+        $help.Synopsis | Should -Not -BeNullOrEmpty
+        $help.Description | Should -Not -BeNullOrEmpty
+        $help.examples.example.Count | Should -BeGreaterThan 0
+    }
+}

@@ -1,0 +1,63 @@
+name: Test on Windows
+
+on:
+  pull_request:
+  push:
+    branches: [main]
+  workflow_dispatch:
+
+permissions:
+  contents: read
+
+jobs:
+  pester:
+    runs-on: windows-latest
+    strategy:
+      fail-fast: false
+      matrix:
+        shell: [pwsh, powershell]
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install Pester 5.x
+        shell: ${{ matrix.shell }}
+        run: |
+          Install-Module -Name Pester -MinimumVersion 5.5.0 -Force -SkipPublisherCheck -Scope CurrentUser
+
+      - name: Import module (smoke check)
+        shell: ${{ matrix.shell }}
+        run: |
+          Import-Module ./src/DefenderDeviceControlUnmanaged/DefenderDeviceControlUnmanaged.psd1 -Force
+          $cmds = Get-Command -Module DefenderDeviceControlUnmanaged
+          if ($cmds.Count -ne 6) {
+            throw "Expected 6 exported cmdlets, got $($cmds.Count): $($cmds.Name -join ', ')"
+          }
+          $cmds | Format-Table Name, CommandType -AutoSize
+
+      - name: Run Pester unit tests
+        shell: ${{ matrix.shell }}
+        run: |
+          $config = New-PesterConfiguration
+          $config.Run.Path = './src/Tests/Unit'
+          $config.Output.Verbosity = 'Detailed'
+          $config.TestResult.Enabled = $true
+          $config.TestResult.OutputPath = "pester-${{ matrix.shell }}.xml"
+          $config.CodeCoverage.Enabled = $true
+          $config.CodeCoverage.Path = './src/DefenderDeviceControlUnmanaged'
+          $config.CodeCoverage.OutputPath = "coverage-${{ matrix.shell }}.xml"
+          $result = Invoke-Pester -Configuration $config
+          Write-Host "Coverage: $($result.CodeCoverage.CoveragePercent)%" -ForegroundColor Cyan
+          if ($result.FailedCount -gt 0) { exit 1 }
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pester-${{ matrix.shell }}
+          path: |
+            pester-${{ matrix.shell }}.xml
+            coverage-${{ matrix.shell }}.xml
+          retention-days: 7
