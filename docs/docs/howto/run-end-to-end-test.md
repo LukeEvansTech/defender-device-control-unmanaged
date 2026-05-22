@@ -92,8 +92,6 @@ DeviceEvents
 
 Filter by `DeviceName` and the time window of your test.
 
-![Advanced Hunting query](../media/screenshots/S4-advanced-hunting.png)
-
 ---
 
 ## Leaving the test mode in place

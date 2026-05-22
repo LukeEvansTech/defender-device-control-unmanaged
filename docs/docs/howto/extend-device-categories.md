@@ -145,8 +145,6 @@ The cmdlet re-validates, removes any prior policy state, writes the 5 registry v
 runs `gpupdate /force`, and nudges the engine with `Update-MpSignature`. See
 [Set-DefenderDcPolicy](../reference/cmdlets/Set-DefenderDcPolicy.md) for all parameters.
 
-![Editor side-by-side](../media/screenshots/S5-xml-editor-diff.png)
-
 ---
 
 ## Step 6: Verify
@@ -157,12 +155,6 @@ Test-DefenderDcPolicy -ExpectMode Enforce
 
 All static checks should report PASS. The engine's `DeviceControlState` must not be
 `Disabled` and `DeviceControlPoliciesLastUpdated` must be a date after the epoch sentinel.
-
----
-
-## Recording
-
-![Custom XML cycle](../media/recordings/T2-custom-xml.gif)
 
 ---
 

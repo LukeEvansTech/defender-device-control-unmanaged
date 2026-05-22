@@ -9,8 +9,6 @@ but the engine ignores the policy until the Sense service is running and the
 checks, automatic ZIP detection, extraction, elevated execution, and post-flight
 verification in a single command.
 
-![Onboarding](../media/recordings/T3-onboarding.gif)
-
 ---
 
 ## Prerequisites

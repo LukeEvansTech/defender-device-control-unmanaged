@@ -28,8 +28,6 @@ When you're confident in audit, flip to enforce:
 Set-DefenderDcPolicy -Mode Enforce
 ```
 
-![Quickstart terminal recording](media/recordings/T1-quickstart.gif)
-
 ## What it does
 
 - **Read:** allowed on USB / WPD / optical.

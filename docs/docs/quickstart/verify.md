@@ -32,8 +32,6 @@ The cmdlet exits with code 0 when all checks pass, and non-zero if any
 check fails. This makes it suitable for use in scripts or CI where you
 want a hard stop on failure.
 
-![Test PASS output](../media/screenshots/S2-test-pass.png)
-
 If any line shows FAIL, the label identifies which registry value or
 engine property is wrong. The most common failure after a fresh apply is
 `DeviceControlState = Disabled` -- meaning the registry is correct but
