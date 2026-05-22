@@ -1,5 +1,6 @@
 function Read-DcPolicyXml {
     [CmdletBinding()]
+    [OutputType([pscustomobject[]])]
     param(
         [Parameter(Mandatory)]
         [string] $Path
@@ -36,7 +37,7 @@ function Read-DcPolicyXml {
         }
         [pscustomobject]@{
             Kind   = $kind
-            Guid   = $idAttr.Value
+            Id     = $idAttr.Value
             RawXml = $n.OuterXml
         }
     }

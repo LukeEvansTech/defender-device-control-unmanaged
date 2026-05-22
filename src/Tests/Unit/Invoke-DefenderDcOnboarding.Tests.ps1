@@ -17,11 +17,12 @@ Describe 'Invoke-DefenderDcOnboarding signature' {
         $isMandatory | Should -BeFalse
     }
 
-    It 'has -SkipPostFlightWait int parameter with default 30' {
+    It 'has -PostFlightWaitSeconds int parameter (with -SkipPostFlightWait alias)' {
         $cmd = Get-Command Invoke-DefenderDcOnboarding
-        $param = $cmd.Parameters['SkipPostFlightWait']
+        $param = $cmd.Parameters['PostFlightWaitSeconds']
         $param | Should -Not -BeNullOrEmpty
         $param.ParameterType | Should -Be ([int])
+        $param.Aliases | Should -Contain 'SkipPostFlightWait'
     }
 
     It 'has populated comment-based help (SYNOPSIS, DESCRIPTION, >=1 EXAMPLE)' {

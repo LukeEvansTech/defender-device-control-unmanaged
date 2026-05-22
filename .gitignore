@@ -25,3 +25,10 @@ reddit_secrets.json
 
 # Zensical build output
 docs/site/
+
+# Desloppify local state
+.desloppify/
+scorecard.png
+
+# Local AI assistant tooling state
+.claude/

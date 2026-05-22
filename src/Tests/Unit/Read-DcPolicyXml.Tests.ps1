@@ -19,15 +19,15 @@ Describe 'Read-DcPolicyXml' {
 
     It 'extracts the Group GUIDs from PolicyGroups.xml' {
         $items = Read-DcPolicyXml -Path (Join-Path $PolicyDir 'PolicyGroups.xml')
-        $items.Guid | Should -Contain '{18c18655-7803-4235-a811-3da676a1f197}'
-        $items.Guid | Should -Contain '{b9854cf9-b7e3-4155-b0ec-5031d44657b3}'
-        $items.Guid | Should -Contain '{c145b8d2-2799-469b-8014-927e7dd9babf}'
+        $items.Id | Should -Contain '{18c18655-7803-4235-a811-3da676a1f197}'
+        $items.Id | Should -Contain '{b9854cf9-b7e3-4155-b0ec-5031d44657b3}'
+        $items.Id | Should -Contain '{c145b8d2-2799-469b-8014-927e7dd9babf}'
     }
 
     It 'RawXml round-trips: re-parsing it yields the same Id' {
         $items = Read-DcPolicyXml -Path (Join-Path $PolicyDir 'PolicyGroups.xml')
         foreach ($i in $items) {
-            ([xml]$i.RawXml).Group.Id | Should -Be $i.Guid
+            ([xml]$i.RawXml).Group.Id | Should -Be $i.Id
         }
     }
 

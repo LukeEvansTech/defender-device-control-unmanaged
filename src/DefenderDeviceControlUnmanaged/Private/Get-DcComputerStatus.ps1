@@ -10,6 +10,7 @@ function Get-DcComputerStatus {
     is absent.
 #>
     [CmdletBinding()]
+    [OutputType([object])]
     param()
     & (Get-Command -Name Get-MpComputerStatus -CommandType Cmdlet -ErrorAction Stop)
 }

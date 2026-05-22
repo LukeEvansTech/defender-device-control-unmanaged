@@ -1,5 +1,6 @@
 function Get-DefenderMpCmdRun {
     [CmdletBinding()]
+    [OutputType([string])]
     param()
 
     $installPath = (Get-ItemProperty -Path 'HKLM:\SOFTWARE\Microsoft\Windows Defender' -Name InstallLocation -ErrorAction SilentlyContinue).InstallLocation

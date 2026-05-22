@@ -44,16 +44,25 @@ function Invoke-DefenderDcUsbTest {
 
     Run an Enforce-mode test and leave Enforce active afterwards.
 
+.OUTPUTS
+    PSCustomObject with properties:
+      Failures       - [int] count of failed checks across pre-flight and verification
+      TranscriptPath - absolute path to the per-invocation transcript log
+      StartMode      - the -StartMode value the test applied ('Audit' or 'Enforce')
+      EventsCaptured - [int] Defender events 1109/1110/1111 captured in the test window (informational; modern MDE routes to XDR)
+      PreTestMode    - DC mode read before -StartMode was applied (used for rollback)
+
 .LINK
     https://lukeevanstech.github.io/defender-device-control-unmanaged/howto/run-end-to-end-test/
 #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     [OutputType([pscustomobject])]
     param(
         [Parameter(Mandatory)]
         [ValidatePattern('^[A-Za-z]:?$')]
         [string] $Drive,
 
+        [Alias('Mode')]
         [ValidateSet('Audit','Enforce')]
         [string] $StartMode = 'Audit',
 
@@ -71,25 +80,10 @@ function Invoke-DefenderDcUsbTest {
     $driveLetter = $Drive.TrimEnd(':').ToUpper()
     $drivePath   = "$driveLetter`:"
 
-    $ts        = Get-Date -Format 'yyyyMMdd-HHmmss'
-    $outputDir = Join-Path $env:LOCALAPPDATA 'DefenderDeviceControlUnmanaged'
-    if (-not (Test-Path -LiteralPath $outputDir)) {
-        New-Item -ItemType Directory -Path $outputDir -Force | Out-Null
-    }
-    $transcript = Join-Path $outputDir "Invoke-DefenderDcUsbTest.$ts.transcript.txt"
-    Start-Transcript -Path $transcript -Force | Out-Null
+    $transcript = Start-DcTranscript -CmdletName 'Invoke-DefenderDcUsbTest'
 
-    $script:usbFailures = 0
-    function Expect {
-        param([string]$Name, [scriptblock]$Test, [string]$ExpectedMsg)
-        try {
-            if (& $Test) { Write-Host "  PASS  $Name" -ForegroundColor Green }
-            else { Write-Host "  FAIL  $Name  ($ExpectedMsg)" -ForegroundColor Red; $script:usbFailures++ }
-        } catch {
-            Write-Host "  FAIL  $Name  (threw: $($_.Exception.Message))" -ForegroundColor Red
-            $script:usbFailures++
-        }
-    }
+    $failures = 0
+    $failureRef = [ref]$failures
 
     $preMode       = $null
     $eventsCaptured = 0
@@ -107,9 +101,9 @@ function Invoke-DefenderDcUsbTest {
         Write-Host "[1/7] Pre-flight" -ForegroundColor Cyan
         Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
         $defender = Get-DcComputerStatus
-        Expect 'Defender AM service enabled' { $defender.AMServiceEnabled } 'AMServiceEnabled must be True'
+        Write-DcCheckResult 'Defender AM service enabled' { $defender.AMServiceEnabled } 'AMServiceEnabled must be True' $failureRef
         $sense = Get-Service -Name Sense -ErrorAction SilentlyContinue
-        Expect 'Sense service Running' { $sense -and $sense.Status -eq 'Running' } 'Sense must be Running'
+        Write-DcCheckResult 'Sense service Running' { $sense -and $sense.Status -eq 'Running' } 'Sense must be Running' $failureRef
 
         # --- Phase 2: Capture pre-state of DC ---
         Write-Host ""
@@ -130,7 +124,7 @@ function Invoke-DefenderDcUsbTest {
         Write-Host "[4/7] Verify static state" -ForegroundColor Cyan
         Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
         $verifyResult = Test-DefenderDcPolicy -ExpectMode $StartMode
-        Expect "Static verification passes for $StartMode" { $verifyResult } "Test-DefenderDcPolicy returned false"
+        Write-DcCheckResult "Static verification passes for $StartMode" { $verifyResult } "Test-DefenderDcPolicy returned false" $failureRef
 
         # --- Phase 5: Operator interactive ---
         Write-Host ""
@@ -185,10 +179,10 @@ function Invoke-DefenderDcUsbTest {
 
         Write-Host ""
         Write-Host "================================================================" -ForegroundColor Cyan
-        if ($script:usbFailures -eq 0) {
+        if ($failureRef.Value -eq 0) {
             Write-Host " Invoke-DefenderDcUsbTest: ALL CHECKS PASSED" -ForegroundColor Green
         } else {
-            Write-Host " Invoke-DefenderDcUsbTest: $($script:usbFailures) CHECKS FAILED" -ForegroundColor Red
+            Write-Host " Invoke-DefenderDcUsbTest: $($failureRef.Value) CHECKS FAILED" -ForegroundColor Red
         }
         Write-Host " Transcript: $transcript" -ForegroundColor Cyan
         Write-Host "================================================================" -ForegroundColor Cyan
@@ -198,7 +192,7 @@ function Invoke-DefenderDcUsbTest {
     }
 
     [pscustomobject]@{
-        Failures       = $script:usbFailures
+        Failures       = $failureRef.Value
         TranscriptPath = $transcript
         StartMode      = $StartMode
         EventsCaptured = $eventsCaptured

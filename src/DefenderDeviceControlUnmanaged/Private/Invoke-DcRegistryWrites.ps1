@@ -1,6 +1,10 @@
 function Invoke-DcRegistryWrites {
     [CmdletBinding(SupportsShouldProcess = $true)]
-    param([Parameter(Mandatory)] $Manifest)
+    [OutputType([void])]
+    param(
+        [Parameter(Mandatory)]
+        [pscustomobject[]] $Manifest
+    )
 
     foreach ($path in $script:DcRoot, $script:DcGroupsKey, $script:DcRulesKey, $script:DcFeatures) {
         if (-not (Test-Path -LiteralPath $path)) {

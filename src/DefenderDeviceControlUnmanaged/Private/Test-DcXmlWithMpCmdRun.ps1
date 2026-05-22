@@ -1,5 +1,6 @@
 function Test-DcXmlWithMpCmdRun {
     [CmdletBinding()]
+    [OutputType([void])]
     param(
         [Parameter(Mandatory)][string]$XmlPath,
         [ValidateSet('Groups','Rules')][Parameter(Mandatory)][string]$Kind
