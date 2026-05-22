@@ -54,7 +54,7 @@ Security. In a PowerShell `Set-Content` or `Copy-Item` call, it surfaces
 as an `UnauthorizedAccessException` with that string in the inner
 message.
 
-![Write protected toast](../../media/screenshots/S3-write-protected-toast.png)
+![Write protected toast](../media/screenshots/S3-write-protected-toast.png)
 
 Read access is unchanged. Opening files from USB, reading directory
 listings, and copying files off the stick all continue to work. The

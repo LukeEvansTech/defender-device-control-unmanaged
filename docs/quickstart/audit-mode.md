@@ -49,7 +49,7 @@ The cmdlet:
 4. Queries `Get-MpComputerStatus` and reports the resulting
    `DeviceControlState`.
 
-![Audit apply terminal](../../media/screenshots/S1-audit-apply.png)
+![Audit apply terminal](../media/screenshots/S1-audit-apply.png)
 
 Expected output ends with:
 

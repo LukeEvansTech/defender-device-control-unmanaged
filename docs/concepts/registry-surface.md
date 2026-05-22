@@ -7,7 +7,7 @@ under `HKLM:\SOFTWARE\Policies\Microsoft\Windows Defender\`. This
 module writes those values directly -- the same values GPMC would push
 under the hood -- without requiring any management infrastructure.
 
-![5-write registry surface](../../media/diagrams/D2-registry-surface.svg)
+![5-write registry surface](../media/diagrams/D2-registry-surface.svg)
 
 ## The five values
 

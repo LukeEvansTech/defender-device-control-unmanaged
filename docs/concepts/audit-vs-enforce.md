@@ -6,7 +6,7 @@ same Groups XML. The only difference is in the Rules XML: Audit registers
 The registry surface is identical in both modes; the behaviour diverges
 entirely because of what is inside those files.
 
-![Audit vs Enforce comparison](../../media/diagrams/D4-audit-vs-enforce.svg)
+![Audit vs Enforce comparison](../media/diagrams/D4-audit-vs-enforce.svg)
 
 ## Same 5 registry writes
 

@@ -14,7 +14,7 @@ engine. The engine checks three conditions before it transitions
 
 ## The three activation conditions
 
-![MDE attach gate decision flow](../../media/diagrams/D3-mde-attach-gate.svg)
+![MDE attach gate decision flow](../media/diagrams/D3-mde-attach-gate.svg)
 
 | Condition | How to check | Expected value |
 |-----------|-------------|----------------|

@@ -6,7 +6,7 @@ to target a different device class, apply a different access mask, or carve out 
 specific device by hardware ID. This page shows the full workflow for extending the
 shipped XML pair with a new group and rule.
 
-![Apply lifecycle](../../media/diagrams/D5-apply-lifecycle.svg)
+![Apply lifecycle](../media/diagrams/D5-apply-lifecycle.svg)
 
 ---
 
@@ -129,7 +129,7 @@ The cmdlet re-validates, removes any prior policy state, writes the 5 registry v
 runs `gpupdate /force`, and nudges the engine with `Update-MpSignature`. See
 [Set-DefenderDcPolicy](../reference/cmdlets/Set-DefenderDcPolicy.md) for all parameters.
 
-![Editor side-by-side](../../media/screenshots/S5-xml-editor-diff.png)
+![Editor side-by-side](../media/screenshots/S5-xml-editor-diff.png)
 
 ---
 
@@ -146,7 +146,7 @@ All static checks should report PASS. The engine's `DeviceControlState` must not
 
 ## Recording
 
-![Custom XML cycle](../../media/recordings/T2-custom-xml.gif)
+![Custom XML cycle](../media/recordings/T2-custom-xml.gif)
 
 ---
 

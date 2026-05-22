@@ -2,7 +2,7 @@
 
 > Microsoft Defender Device Control for **unmanaged** Windows 11 devices - no Intune, no domain GPO, no MDM. Just a PowerShell module you install.
 
-![Deployment-method matrix](../media/diagrams/D1-deployment-methods.svg)
+![Deployment-method matrix](media/diagrams/D1-deployment-methods.svg)
 
 Microsoft's own documentation for Defender Device Control assumes you deploy via Intune CSP, domain GPO (GPMC), or Configuration Manager. The canonical local GPO registry surface - what GPMC would push under the hood - is buried in `WindowsDefender.admx` and never explained as a deployable path. **Unmanaged Windows 11 devices are out in the cold even when they're MDE-licensed.** This module is that deployable path.
 
@@ -20,7 +20,7 @@ When you're confident in audit, flip to enforce:
 Set-DefenderDcPolicy -Mode Enforce
 ```
 
-![Quickstart terminal recording](../media/recordings/T1-quickstart.gif)
+![Quickstart terminal recording](media/recordings/T1-quickstart.gif)
 
 ## What it does
 
