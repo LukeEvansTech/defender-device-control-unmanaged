@@ -15,7 +15,7 @@ jobs:
     strategy:
       fail-fast: false
       matrix:
-        shell: [pwsh, powershell]
+        psShell: [pwsh, powershell]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,12 +23,12 @@ jobs:
           persist-credentials: false
 
       - name: Install Pester 5.x
-        shell: ${{ matrix.shell }}
+        shell: ${{ matrix.psShell }}
         run: |
           Install-Module -Name Pester -MinimumVersion 5.5.0 -Force -SkipPublisherCheck -Scope CurrentUser
 
       - name: Import module (smoke check)
-        shell: ${{ matrix.shell }}
+        shell: ${{ matrix.psShell }}
         run: |
           Import-Module ./src/DefenderDeviceControlUnmanaged/DefenderDeviceControlUnmanaged.psd1 -Force
           $cmds = Get-Command -Module DefenderDeviceControlUnmanaged
@@ -38,16 +38,16 @@ jobs:
           $cmds | Format-Table Name, CommandType -AutoSize
 
       - name: Run Pester unit tests
-        shell: ${{ matrix.shell }}
+        shell: ${{ matrix.psShell }}
         run: |
           $config = New-PesterConfiguration
           $config.Run.Path = './src/Tests/Unit'
           $config.Output.Verbosity = 'Detailed'
           $config.TestResult.Enabled = $true
-          $config.TestResult.OutputPath = "pester-${{ matrix.shell }}.xml"
+          $config.TestResult.OutputPath = "pester-${{ matrix.psShell }}.xml"
           $config.CodeCoverage.Enabled = $true
           $config.CodeCoverage.Path = './src/DefenderDeviceControlUnmanaged'
-          $config.CodeCoverage.OutputPath = "coverage-${{ matrix.shell }}.xml"
+          $config.CodeCoverage.OutputPath = "coverage-${{ matrix.psShell }}.xml"
           $result = Invoke-Pester -Configuration $config
           Write-Host "Coverage: $($result.CodeCoverage.CoveragePercent)%" -ForegroundColor Cyan
           if ($result.FailedCount -gt 0) { exit 1 }
@@ -56,8 +56,8 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pester-${{ matrix.shell }}
+          name: pester-${{ matrix.psShell }}
           path: |
-            pester-${{ matrix.shell }}.xml
-            coverage-${{ matrix.shell }}.xml
+            pester-${{ matrix.psShell }}.xml
+            coverage-${{ matrix.psShell }}.xml
           retention-days: 7
