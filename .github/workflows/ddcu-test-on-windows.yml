@@ -10,12 +10,9 @@ permissions:
   contents: read
 
 jobs:
-  pester:
+  pester-pwsh:
+    name: Pester (PowerShell 7.x)
     runs-on: windows-latest
-    strategy:
-      fail-fast: false
-      matrix:
-        psShell: [pwsh, powershell]
     steps:
       - name: Checkout
         uses: actions/checkout@v4
@@ -23,12 +20,12 @@ jobs:
           persist-credentials: false
 
       - name: Install Pester 5.x
-        shell: ${{ matrix.psShell }}
+        shell: pwsh
         run: |
           Install-Module -Name Pester -MinimumVersion 5.5.0 -Force -SkipPublisherCheck -Scope CurrentUser
 
       - name: Import module (smoke check)
-        shell: ${{ matrix.psShell }}
+        shell: pwsh
         run: |
           Import-Module ./src/DefenderDeviceControlUnmanaged/DefenderDeviceControlUnmanaged.psd1 -Force
           $cmds = Get-Command -Module DefenderDeviceControlUnmanaged
@@ -38,16 +35,16 @@ jobs:
           $cmds | Format-Table Name, CommandType -AutoSize
 
       - name: Run Pester unit tests
-        shell: ${{ matrix.psShell }}
+        shell: pwsh
         run: |
           $config = New-PesterConfiguration
           $config.Run.Path = './src/Tests/Unit'
           $config.Output.Verbosity = 'Detailed'
           $config.TestResult.Enabled = $true
-          $config.TestResult.OutputPath = "pester-${{ matrix.psShell }}.xml"
+          $config.TestResult.OutputPath = 'pester-pwsh.xml'
           $config.CodeCoverage.Enabled = $true
           $config.CodeCoverage.Path = './src/DefenderDeviceControlUnmanaged'
-          $config.CodeCoverage.OutputPath = "coverage-${{ matrix.psShell }}.xml"
+          $config.CodeCoverage.OutputPath = 'coverage-pwsh.xml'
           $result = Invoke-Pester -Configuration $config
           Write-Host "Coverage: $($result.CodeCoverage.CoveragePercent)%" -ForegroundColor Cyan
           if ($result.FailedCount -gt 0) { exit 1 }
@@ -56,8 +53,57 @@ jobs:
         if: always()
         uses: actions/upload-artifact@v4
         with:
-          name: pester-${{ matrix.psShell }}
+          name: pester-pwsh
           path: |
-            pester-${{ matrix.psShell }}.xml
-            coverage-${{ matrix.psShell }}.xml
+            pester-pwsh.xml
+            coverage-pwsh.xml
+          retention-days: 7
+
+  pester-windows-powershell:
+    name: Pester (Windows PowerShell 5.1)
+    runs-on: windows-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+        with:
+          persist-credentials: false
+
+      - name: Install Pester 5.x
+        shell: powershell
+        run: |
+          Install-Module -Name Pester -MinimumVersion 5.5.0 -Force -SkipPublisherCheck -Scope CurrentUser
+
+      - name: Import module (smoke check)
+        shell: powershell
+        run: |
+          Import-Module ./src/DefenderDeviceControlUnmanaged/DefenderDeviceControlUnmanaged.psd1 -Force
+          $cmds = Get-Command -Module DefenderDeviceControlUnmanaged
+          if ($cmds.Count -ne 6) {
+            throw "Expected 6 exported cmdlets, got $($cmds.Count): $($cmds.Name -join ', ')"
+          }
+          $cmds | Format-Table Name, CommandType -AutoSize
+
+      - name: Run Pester unit tests
+        shell: powershell
+        run: |
+          $config = New-PesterConfiguration
+          $config.Run.Path = './src/Tests/Unit'
+          $config.Output.Verbosity = 'Detailed'
+          $config.TestResult.Enabled = $true
+          $config.TestResult.OutputPath = 'pester-powershell.xml'
+          $config.CodeCoverage.Enabled = $true
+          $config.CodeCoverage.Path = './src/DefenderDeviceControlUnmanaged'
+          $config.CodeCoverage.OutputPath = 'coverage-powershell.xml'
+          $result = Invoke-Pester -Configuration $config
+          Write-Host "Coverage: $($result.CodeCoverage.CoveragePercent)%" -ForegroundColor Cyan
+          if ($result.FailedCount -gt 0) { exit 1 }
+
+      - name: Upload test results
+        if: always()
+        uses: actions/upload-artifact@v4
+        with:
+          name: pester-powershell
+          path: |
+            pester-powershell.xml
+            coverage-powershell.xml
           retention-days: 7
