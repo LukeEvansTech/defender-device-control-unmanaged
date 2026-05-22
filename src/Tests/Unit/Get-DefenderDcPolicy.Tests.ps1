@@ -68,8 +68,8 @@ Describe 'Get-DefenderDcPolicy' {
                 Mock Test-Path { return $false }
                 Mock Read-DcPolicyXml {
                     # Return a single Rule with an AuditAllowed entry
-                    $rawXml = '<PolicyRule Id="{x}"><Entry Id="{y}"><Type>AuditAllowed</Type></Entry></PolicyRule>'
-                    [pscustomobject]@{ Kind='Rule'; Id='{x}'; RawXml = $rawXml }
+                    $rawXml = '<PolicyRule Id="{x}"><Entry Id="{y}" Type="AuditAllowed" /></PolicyRule>'
+                    [pscustomobject]@{ Kind='Rule'; Id='{x}'; EntryTypes=@('AuditAllowed'); RawXml = $rawXml }
                 }
 
                 $result = Get-DefenderDcPolicy
@@ -97,8 +97,8 @@ Describe 'Get-DefenderDcPolicy' {
                 Mock Test-Path { return $true } -ParameterFilter { $LiteralPath -like '*Rules.xml' }
                 Mock Test-Path { return $false }
                 Mock Read-DcPolicyXml {
-                    $rawXml = '<PolicyRule Id="{x}"><Entry Id="{y}"><Type>Deny</Type></Entry></PolicyRule>'
-                    [pscustomobject]@{ Kind='Rule'; Id='{x}'; RawXml = $rawXml }
+                    $rawXml = '<PolicyRule Id="{x}"><Entry Id="{y}" Type="Deny" /></PolicyRule>'
+                    [pscustomobject]@{ Kind='Rule'; Id='{x}'; EntryTypes=@('Deny'); RawXml = $rawXml }
                 }
 
                 $result = Get-DefenderDcPolicy

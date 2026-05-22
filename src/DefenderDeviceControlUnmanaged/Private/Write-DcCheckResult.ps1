@@ -11,6 +11,11 @@ function Write-DcCheckResult {
     result or thrown exception. Increments the caller's failure counter
     on FAIL via a [ref] parameter.
 
+    Also writes a structured per-check record to the Information stream
+    (PSCustomObject with Result/Name/ExpectedMsg/Error) tagged with the
+    'DcCheck' Information tag, so scripted callers can capture results
+    via -InformationVariable or 6>&1 without losing the colored host UX.
+
 .PARAMETER Name
     Human-readable description of the check.
 
@@ -39,15 +44,26 @@ function Write-DcCheckResult {
         [ref] $FailureCounter
     )
 
+    $result      = 'FAIL'
+    $errorDetail = $null
     try {
         if (& $Test) {
+            $result = 'PASS'
             Write-Host "  PASS  $Name" -ForegroundColor Green
         } else {
             Write-Host "  FAIL  $Name  ($ExpectedMsg)" -ForegroundColor Red
             $FailureCounter.Value++
         }
     } catch {
-        Write-Host "  FAIL  $Name  (threw: $($_.Exception.Message))" -ForegroundColor Red
+        $errorDetail = $_.Exception.Message
+        Write-Host "  FAIL  $Name  (threw: $errorDetail)" -ForegroundColor Red
         $FailureCounter.Value++
     }
+
+    Write-Information ([pscustomobject]@{
+        Result      = $result
+        Name        = $Name
+        ExpectedMsg = $ExpectedMsg
+        Error       = $errorDetail
+    }) -Tags 'DcCheck'
 }

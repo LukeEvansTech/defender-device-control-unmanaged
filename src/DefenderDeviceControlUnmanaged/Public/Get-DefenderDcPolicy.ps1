@@ -51,8 +51,7 @@ function Get-DefenderDcPolicy {
     $mode = 'Off'
     if ($rulesXml -and (Test-Path -LiteralPath $rulesXml)) {
         try {
-            $items = Read-DcPolicyXml -Path $rulesXml
-            $allTypes = $items | ForEach-Object { ([xml]$_.RawXml).PolicyRule.Entry.Type }
+            $allTypes = (Read-DcPolicyXml -Path $rulesXml).EntryTypes
             if ($allTypes -contains 'Deny') { $mode = 'Enforce' }
             elseif ($allTypes -contains 'AuditAllowed') { $mode = 'Audit' }
         } catch {

@@ -29,16 +29,19 @@ function Read-DcPolicyXml {
         if ($null -eq $idAttr -or [string]::IsNullOrWhiteSpace($idAttr.Value)) {
             throw "Read-DcPolicyXml: $Path contains a <$($n.LocalName)> element with no Id attribute."
         }
+        $entryTypes = @()
         if ($kind -eq 'Rule') {
             $entries = @($n.SelectNodes('Entry'))
             if ($entries.Count -lt 1) {
                 throw "Read-DcPolicyXml: $Path PolicyRule $($idAttr.Value) has no <Entry> elements."
             }
+            $entryTypes = @($entries | ForEach-Object { $_.Attributes['Type'].Value })
         }
         [pscustomobject]@{
-            Kind   = $kind
-            Id     = $idAttr.Value
-            RawXml = $n.OuterXml
+            Kind       = $kind
+            Id         = $idAttr.Value
+            EntryTypes = $entryTypes
+            RawXml     = $n.OuterXml
         }
     }
 }

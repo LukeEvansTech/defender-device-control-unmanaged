@@ -113,10 +113,8 @@ function Test-DefenderDcPolicy {
         $expectedType = if ($ExpectMode -eq 'Audit') { 'AuditAllowed' } else { 'Deny' }
         Write-DcCheckResult "Rules XML uses Entry Type=$expectedType (matches ExpectMode)" {
             if ($null -eq $rulesRef.Value -or -not (Test-Path -LiteralPath $rulesRef.Value -PathType Leaf)) { return $false }
-            $items = Read-DcPolicyXml -Path $rulesRef.Value
-            foreach ($r in $items) {
-                $types = @(([xml]$r.RawXml).PolicyRule.Entry.Type)
-                if ($types -notcontains $expectedType) { return $false }
+            foreach ($r in (Read-DcPolicyXml -Path $rulesRef.Value)) {
+                if ($r.EntryTypes -notcontains $expectedType) { return $false }
             }
             $true
         } "Mode $ExpectMode requires at least one $expectedType entry per rule" $failureRef

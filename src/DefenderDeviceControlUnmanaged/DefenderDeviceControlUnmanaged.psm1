@@ -23,7 +23,7 @@ foreach ($file in @($public + $private)) {
     try {
         . $file.FullName
     } catch {
-        throw ('Unable to dot source {0}' -f $file.FullName)
+        throw ('Unable to dot source {0}: {1}' -f $file.FullName, $_.Exception.Message)
     }
 }
 
