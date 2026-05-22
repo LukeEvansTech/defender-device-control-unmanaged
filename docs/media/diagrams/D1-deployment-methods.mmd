@@ -1,7 +1,0 @@
-flowchart LR
-    A[Microsoft Defender<br/>Device Control] --> B{Deployment method}
-    B -->|Managed| C[Intune CSP]
-    B -->|Managed| D[Domain GPO<br/>via GPMC]
-    B -->|Managed| E[Configuration<br/>Manager]
-    B -->|Unmanaged| F["<b>Local GPO Registry</b><br/><i>this module</i>"]
-    style F fill:#0066cc,color:#fff,stroke:#003366,stroke-width:3px
