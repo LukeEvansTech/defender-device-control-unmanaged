@@ -83,7 +83,10 @@ Describe 'Test-DefenderDcPolicyXml' {
         # must still run via Read-DcPolicyXml.
         $tmp = New-TemporaryFile
         $xml = '<PolicyRules><PolicyRule Id="{aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa}"><Name>empty</Name><IncludedIdList><GroupId>{x}</GroupId></IncludedIdList><ExcludedIdList/></PolicyRule></PolicyRules>'
-        Set-Content -LiteralPath $tmp.FullName -Value $xml -Encoding utf8
+        # Portable BOM-less UTF-8 write — Set-Content -Encoding utf8 emits a BOM
+        # on Windows PowerShell 5.1, which would trip the BOM check before the
+        # structural layer this test is targeting.
+        [System.IO.File]::WriteAllText($tmp.FullName, $xml, [System.Text.UTF8Encoding]::new($false))
         try {
             $result = Test-DefenderDcPolicyXml -Path $tmp.FullName -Kind Rules -SkipEngineValidation -ErrorVariable err -ErrorAction SilentlyContinue
             $result | Should -BeFalse
