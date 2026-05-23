@@ -77,6 +77,21 @@ Describe 'Test-DefenderDcPolicyXml' {
         ($err -join ' ') | Should -Match 'not found'
     }
 
+    It 'still rejects an empty-Entry-list PolicyRule under -SkipEngineValidation' {
+        # Regression for the Codex P2: when MpCmdRun is skipped, the per-element
+        # structural checks (every PolicyRule has at least one <Entry>, Id present)
+        # must still run via Read-DcPolicyXml.
+        $tmp = New-TemporaryFile
+        $xml = '<PolicyRules><PolicyRule Id="{aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa}"><Name>empty</Name><IncludedIdList><GroupId>{x}</GroupId></IncludedIdList><ExcludedIdList/></PolicyRule></PolicyRules>'
+        Set-Content -LiteralPath $tmp.FullName -Value $xml -Encoding utf8
+        try {
+            $result = Test-DefenderDcPolicyXml -Path $tmp.FullName -Kind Rules -SkipEngineValidation -ErrorVariable err -ErrorAction SilentlyContinue
+            $result | Should -BeFalse
+            ($err -join ' ') | Should -Match 'Entry|structural'
+        }
+        finally { Remove-Item $tmp.FullName -Force }
+    }
+
     It 'has populated comment-based help (SYNOPSIS, DESCRIPTION, >=1 EXAMPLE)' {
         $help = Get-Help Test-DefenderDcPolicyXml -Full
         $help.Synopsis | Should -Not -BeNullOrEmpty

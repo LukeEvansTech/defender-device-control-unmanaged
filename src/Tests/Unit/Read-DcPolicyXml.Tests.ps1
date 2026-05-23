@@ -55,4 +55,18 @@ Describe 'Read-DcPolicyXml' {
         try { { Read-DcPolicyXml -Path $tmp.FullName } | Should -Throw -ExpectedMessage '*Entry*' }
         finally { Remove-Item $tmp.FullName -Force }
     }
+
+    It 'extracts EntryTypes from <Type> child elements of <Entry>' {
+        $items = Read-DcPolicyXml -Path (Join-Path $PolicyDir 'PolicyRules.Enforce.xml')
+        # The shipped Enforce fixture has Deny + AuditDenied entries per rule;
+        # Audit-build fixtures use AuditAllowed. Either way EntryTypes must be
+        # populated (this catches the .Attributes['Type'] regression).
+        foreach ($i in $items) {
+            $i.EntryTypes | Should -Not -BeNullOrEmpty
+            $i.EntryTypes | ForEach-Object { $_ | Should -BeOfType [string] }
+            $i.EntryTypes | ForEach-Object { $_ | Should -Match '^(Deny|AuditDenied|AuditAllowed|Allow)$' }
+        }
+        # The Enforce starter must contain at least one Deny across all rules.
+        ($items | ForEach-Object { $_.EntryTypes }) -contains 'Deny' | Should -BeTrue
+    }
 }

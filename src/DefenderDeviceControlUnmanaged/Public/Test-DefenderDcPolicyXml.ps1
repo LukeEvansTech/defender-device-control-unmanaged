@@ -113,6 +113,18 @@ function Test-DefenderDcPolicyXml {
         }
     }
 
+    # Layer 2d: structural per-element checks via Read-DcPolicyXml — runs even when
+    # -SkipEngineValidation is set so callers (e.g. Set-DefenderDcPolicy
+    # -SkipMpCmdRunValidation) still get "every PolicyRule has at least one <Entry>"
+    # and "every Group/PolicyRule has an Id attribute" enforcement before any
+    # registry writes happen.
+    try {
+        Read-DcPolicyXml -Path $Path | Out-Null
+    } catch {
+        Write-Error "Test-DefenderDcPolicyXml: structural validation failed: $($_.Exception.Message)"
+        return $false
+    }
+
     # Layer 3: engine-side via MpCmdRun (skipped silently if MpCmdRun absent)
     if (-not $SkipEngineValidation) {
         try {

@@ -35,7 +35,15 @@ function Read-DcPolicyXml {
             if ($entries.Count -lt 1) {
                 throw "Read-DcPolicyXml: $Path PolicyRule $($idAttr.Value) has no <Entry> elements."
             }
-            $entryTypes = @($entries | ForEach-Object { $_.Attributes['Type'].Value })
+            # WindowsDefender.admx Rules schema: <Type> is a child element of <Entry>,
+            # not an attribute. SelectSingleNode keeps this strict-mode safe when the
+            # element is absent (older/hand-edited XMLs).
+            $entryTypes = @(
+                foreach ($e in $entries) {
+                    $typeNode = $e.SelectSingleNode('Type')
+                    if ($null -ne $typeNode) { $typeNode.InnerText }
+                }
+            )
         }
         [pscustomobject]@{
             Kind       = $kind
