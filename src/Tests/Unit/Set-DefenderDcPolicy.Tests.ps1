@@ -107,7 +107,7 @@ Describe 'Set-DefenderDcPolicy' {
             }
         }
 
-        It '-SkipMpCmdRunValidation falls back to a parse-only Read-DcPolicyXml check' {
+        It '-SkipMpCmdRunValidation keeps the public validator but skips the engine-side layer' {
             InModuleScope DefenderDeviceControlUnmanaged {
                 Mock Test-DcIsElevated { $true }
                 Mock Get-DcComputerStatus { [pscustomobject]@{ AMServiceEnabled = $true; AMEngineVersion = '0.0'; IsTamperProtected = $false } }
@@ -123,9 +123,33 @@ Describe 'Set-DefenderDcPolicy' {
 
                 Set-DefenderDcPolicy -Mode Enforce -GroupsXmlPath '/tmp/g.xml' -RulesXmlPath '/tmp/r.xml' -SkipMpCmdRunValidation -SkipGpUpdate -Confirm:$false
 
-                Should -Invoke Test-DefenderDcPolicyXml   -Times 0 -Exactly
-                Should -Invoke Read-DcPolicyXml           -Times 2 -Exactly
+                Should -Invoke Test-DefenderDcPolicyXml   -Times 2 -Exactly
+                Should -Invoke Test-DefenderDcPolicyXml   -Times 2 -Exactly -ParameterFilter { $SkipEngineValidation }
+                Should -Invoke Read-DcPolicyXml           -Times 0 -Exactly
                 Should -Invoke Invoke-DcRegistryWrites    -Times 1 -Exactly
+            }
+        }
+
+        It 'does not remove or write policy state under -WhatIf' {
+            InModuleScope DefenderDeviceControlUnmanaged {
+                Mock Test-DcIsElevated { $true }
+                Mock Get-DcComputerStatus { [pscustomobject]@{ AMServiceEnabled = $true; AMEngineVersion = '0.0'; IsTamperProtected = $false } }
+                Mock Test-Path { $true } -ParameterFilter { $LiteralPath -like '*.xml' }
+                Mock Test-DefenderDcPolicyXml { $true }
+                Mock Get-DcRegistryManifest {
+                    @([pscustomobject]@{ Path='x'; Name='n'; Type='DWord'; Value=1 })
+                }
+                Mock Remove-DcPolicy { }
+                Mock Invoke-DcRegistryWrites { }
+                Mock Start-DcTranscript { '/tmp/fake.transcript.txt' }
+                Mock Stop-Transcript { }
+                Mock Update-MpSignature { }
+
+                Set-DefenderDcPolicy -Mode Audit -GroupsXmlPath '/tmp/g.xml' -RulesXmlPath '/tmp/r.xml' -SkipGpUpdate -WhatIf
+
+                Should -Invoke Remove-DcPolicy         -Times 0 -Exactly
+                Should -Invoke Invoke-DcRegistryWrites -Times 0 -Exactly
+                Should -Invoke Update-MpSignature      -Times 0 -Exactly
             }
         }
 

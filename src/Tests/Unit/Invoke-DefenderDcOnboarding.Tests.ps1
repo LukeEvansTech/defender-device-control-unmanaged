@@ -75,4 +75,32 @@ Describe 'Invoke-DefenderDcOnboarding pre-flight' {
             }
         }
     }
+
+    Context 'when invoked with -WhatIf' {
+        It 'skips ZIP extraction, execution, and post-flight work' {
+            InModuleScope DefenderDeviceControlUnmanaged {
+                Mock Test-DcIsElevated { $true }
+                Mock Start-DcTranscript { '/tmp/fake.transcript.txt' }
+                Mock Stop-Transcript { }
+                Mock Get-DcComputerStatus {
+                    [pscustomobject]@{ AMServiceEnabled = $true; AMEngineVersion = '0.0'; AMProductVersion = '0.0'; IsTamperProtected = $false }
+                }
+                Mock Get-Service {
+                    [pscustomobject]@{ Name = 'Sense'; Status = 'Stopped' }
+                } -ParameterFilter { $Name -eq 'Sense' }
+                Mock Test-Path { $true }
+                Mock Get-ItemProperty {
+                    [pscustomobject]@{ OnboardingState = 0 }
+                } -ParameterFilter { $Name -eq 'OnboardingState' }
+                Mock Expand-Archive { }
+                Mock Start-Sleep { }
+
+                $result = Invoke-DefenderDcOnboarding -OnboardingScript '/tmp/onboarding.zip' -WhatIf
+
+                $result.Failures | Should -Be 0
+                Should -Invoke Expand-Archive -Times 0 -Exactly
+                Should -Invoke Start-Sleep    -Times 0 -Exactly
+            }
+        }
+    }
 }

@@ -1,0 +1,283 @@
+﻿<?xml version="1.0" encoding="utf-8" standalone="no"?>
+<test-results xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance" xsi:noNamespaceSchemaLocation="nunit_schema_2.5.xsd" name="Pester" total="86" errors="0" failures="0" not-run="0" inconclusive="0" ignored="0" skipped="0" invalid="0" date="2026-05-23" time="21:24:48">
+  <environment nunit-version="2.5.8.0" machine-name="runnervmg397c" user="runner" cwd="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged" user-domain="" clr-version="8.0.26" platform="Linux" os-version="6.17.0-1013-azure" />
+  <culture-info current-culture="" current-uiculture="" />
+  <test-suite type="TestFixture" name="Pester" executed="True" result="Success" success="True" time="8.8362" asserts="0" description="Pester">
+    <results>
+      <test-suite type="TestFixture" name="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/DefenderDeviceControlUnmanaged-Module.Tests.ps1" executed="True" result="Success" success="True" time="0.9956" asserts="0" description="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/DefenderDeviceControlUnmanaged-Module.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Module manifest" executed="True" result="Success" success="True" time="0.4238" asserts="0" description="Module manifest">
+            <results>
+              <test-case description="passes Test-ModuleManifest" name="Module manifest.passes Test-ModuleManifest" time="0.2127" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="has ModuleVersion 1.0.0" name="Module manifest.has ModuleVersion 1.0.0" time="0.0813" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="declares CompatiblePSEditions Core and Desktop" name="Module manifest.declares CompatiblePSEditions Core and Desktop" time="0.0167" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="declares PowerShellVersion &gt;= 5.1" name="Module manifest.declares PowerShellVersion &gt;= 5.1" time="0.0162" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="declares the required tags" name="Module manifest.declares the required tags" time="0.0371" asserts="0" success="True" result="Success" executed="True" />
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/ExportedFunctions.Tests.ps1" executed="True" result="Success" success="True" time="0.5707" asserts="0" description="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/ExportedFunctions.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Exported functions surface" executed="True" result="Success" success="True" time="0.398" asserts="0" description="Exported functions surface">
+            <results>
+              <test-case description="exports exactly 6 cmdlets" name="Exported functions surface.exports exactly 6 cmdlets" time="0.0261" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="exports the canonical 6 cmdlet names" name="Exported functions surface.exports the canonical 6 cmdlet names" time="0.0196" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="does not leak private helpers" name="Exported functions surface.does not leak private helpers" time="0.022" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="every exported cmdlet has comment-based help with SYNOPSIS and EXAMPLES" name="Exported functions surface.every exported cmdlet has comment-based help with SYNOPSIS and EXAMPLES" time="0.3173" asserts="0" success="True" result="Success" executed="True" />
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/Get-DcMpCmdRunPath.Tests.ps1" executed="True" result="Success" success="True" time="1.2934" asserts="0" description="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/Get-DcMpCmdRunPath.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Get-DcMpCmdRunPath (MpCmdRun.exe discovery)" executed="True" result="Success" success="True" time="1.1622" asserts="0" description="Get-DcMpCmdRunPath (MpCmdRun.exe discovery)">
+            <results>
+              <test-suite type="TestFixture" name="Get-DcMpCmdRunPath (MpCmdRun.exe discovery).when registry InstallLocation points at a real MpCmdRun.exe" executed="True" result="Success" success="True" time="0.824" asserts="0" description="Get-DcMpCmdRunPath (MpCmdRun.exe discovery).when registry InstallLocation points at a real MpCmdRun.exe">
+                <results>
+                  <test-case description="returns the registry path" name="Get-DcMpCmdRunPath (MpCmdRun.exe discovery).when registry InstallLocation points at a real MpCmdRun.exe.returns the registry path" time="0.7677" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Get-DcMpCmdRunPath (MpCmdRun.exe discovery).when registry InstallLocation is set but MpCmdRun.exe is missing on disk" executed="True" result="Success" success="True" time="0.9144" asserts="0" description="Get-DcMpCmdRunPath (MpCmdRun.exe discovery).when registry InstallLocation is set but MpCmdRun.exe is missing on disk">
+                <results>
+                  <test-case description="falls back to the newest Platform install" name="Get-DcMpCmdRunPath (MpCmdRun.exe discovery).when registry InstallLocation is set but MpCmdRun.exe is missing on disk.falls back to the newest Platform install" time="0.0815" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Get-DcMpCmdRunPath (MpCmdRun.exe discovery).when registry InstallLocation is absent and Platform fallback also empty" executed="True" result="Success" success="True" time="0.9837" asserts="0" description="Get-DcMpCmdRunPath (MpCmdRun.exe discovery).when registry InstallLocation is absent and Platform fallback also empty">
+                <results>
+                  <test-case description="returns $null" name="Get-DcMpCmdRunPath (MpCmdRun.exe discovery).when registry InstallLocation is absent and Platform fallback also empty.returns $null" time="0.0601" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Get-DcMpCmdRunPath (MpCmdRun.exe discovery).when neither InstallLocation registry value nor Platform path exists" executed="True" result="Success" success="True" time="1.1472" asserts="0" description="Get-DcMpCmdRunPath (MpCmdRun.exe discovery).when neither InstallLocation registry value nor Platform path exists">
+                <results>
+                  <test-case description="returns $null without throwing" name="Get-DcMpCmdRunPath (MpCmdRun.exe discovery).when neither InstallLocation registry value nor Platform path exists.returns $null without throwing" time="0.1451" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/Get-DcRegistryManifest.Tests.ps1" executed="True" result="Success" success="True" time="0.3619" asserts="0" description="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/Get-DcRegistryManifest.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Get-DcRegistryManifest (GPO file-path schema)" executed="True" result="Success" success="True" time="0.3027" asserts="0" description="Get-DcRegistryManifest (GPO file-path schema)">
+            <results>
+              <test-case description="rejects relative paths for GroupsXmlPath" name="Get-DcRegistryManifest (GPO file-path schema).rejects relative paths for GroupsXmlPath" time="0.095" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="rejects relative paths for RulesXmlPath" name="Get-DcRegistryManifest (GPO file-path schema).rejects relative paths for RulesXmlPath" time="0.0231" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="produces exactly 5 writes" name="Get-DcRegistryManifest (GPO file-path schema).produces exactly 5 writes" time="0.0323" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="writes Features\DeviceControlEnabled (DWORD=1) as the LAST write" name="Get-DcRegistryManifest (GPO file-path schema).writes Features\DeviceControlEnabled (DWORD=1) as the LAST write" time="0.0491" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="writes the groups XML path as REG_SZ named PolicyGroups under &quot;Policy Groups&quot; sub-key" name="Get-DcRegistryManifest (GPO file-path schema).writes the groups XML path as REG_SZ named PolicyGroups under &quot;Policy Groups&quot; sub-key" time="0.0537" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="writes the rules XML path as REG_SZ named PolicyRules under &quot;Policy Rules&quot; sub-key" name="Get-DcRegistryManifest (GPO file-path schema).writes the rules XML path as REG_SZ named PolicyRules under &quot;Policy Rules&quot; sub-key" time="0.0119" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="sets DefaultEnforcement to 1 (Allow) so non-rule devices stay usable" name="Get-DcRegistryManifest (GPO file-path schema).sets DefaultEnforcement to 1 (Allow) so non-rule devices stay usable" time="0.0137" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="sets SecuredDevicesConfiguration to the three secured classes (no PrinterDevices)" name="Get-DcRegistryManifest (GPO file-path schema).sets SecuredDevicesConfiguration to the three secured classes (no PrinterDevices)" time="0.0112" asserts="0" success="True" result="Success" executed="True" />
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/Get-DefenderDcPolicy.Tests.ps1" executed="True" result="Success" success="True" time="1.0122" asserts="0" description="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/Get-DefenderDcPolicy.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Get-DefenderDcPolicy" executed="True" result="Success" success="True" time="0.9643" asserts="0" description="Get-DefenderDcPolicy">
+            <results>
+              <test-suite type="TestFixture" name="Get-DefenderDcPolicy.when no policy is installed (registry absent, engine reports Disabled)" executed="True" result="Success" success="True" time="0.5085" asserts="0" description="Get-DefenderDcPolicy.when no policy is installed (registry absent, engine reports Disabled)">
+                <results>
+                  <test-case description="returns Mode='Off' and null XML paths" name="Get-DefenderDcPolicy.when no policy is installed (registry absent, engine reports Disabled).returns Mode='Off' and null XML paths" time="0.3176" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Get-DefenderDcPolicy.when policy is in Audit mode (Rules XML contains AuditAllowed entries)" executed="True" result="Success" success="True" time="0.8168" asserts="0" description="Get-DefenderDcPolicy.when policy is in Audit mode (Rules XML contains AuditAllowed entries)">
+                <results>
+                  <test-case description="returns Mode='Audit'" name="Get-DefenderDcPolicy.when policy is in Audit mode (Rules XML contains AuditAllowed entries).returns Mode='Audit'" time="0.2943" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Get-DefenderDcPolicy.when policy is in Enforce mode (Rules XML contains Deny entries)" executed="True" result="Success" success="True" time="0.9555" asserts="0" description="Get-DefenderDcPolicy.when policy is in Enforce mode (Rules XML contains Deny entries)">
+                <results>
+                  <test-case description="returns Mode='Enforce'" name="Get-DefenderDcPolicy.when policy is in Enforce mode (Rules XML contains Deny entries).returns Mode='Enforce'" time="0.1209" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-case description="has no required parameters" name="Get-DefenderDcPolicy.has no required parameters" time="0.026" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="declares OutputType DefenderDeviceControlUnmanaged.Policy" name="Get-DefenderDcPolicy.declares OutputType DefenderDeviceControlUnmanaged.Policy" time="0.0103" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="has populated comment-based help (SYNOPSIS, DESCRIPTION, &gt;=1 EXAMPLE)" name="Get-DefenderDcPolicy.has populated comment-based help (SYNOPSIS, DESCRIPTION, &gt;=1 EXAMPLE)" time="0.1391" asserts="0" success="True" result="Success" executed="True" />
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/Invoke-DcRegistryWrites.Tests.ps1" executed="True" result="Success" success="True" time="0.8975" asserts="0" description="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/Invoke-DcRegistryWrites.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Invoke-DcRegistryWrites (registry mutator + rollback)" executed="True" result="Success" success="True" time="0.8511" asserts="0" description="Invoke-DcRegistryWrites (registry mutator + rollback)">
+            <results>
+              <test-suite type="TestFixture" name="Invoke-DcRegistryWrites (registry mutator + rollback).happy path" executed="True" result="Success" success="True" time="0.5089" asserts="0" description="Invoke-DcRegistryWrites (registry mutator + rollback).happy path">
+                <results>
+                  <test-case description="invokes New-ItemProperty exactly once per manifest entry in order" name="Invoke-DcRegistryWrites (registry mutator + rollback).happy path.invokes New-ItemProperty exactly once per manifest entry in order" time="0.2843" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="creates missing parent keys before writing values" name="Invoke-DcRegistryWrites (registry mutator + rollback).happy path.creates missing parent keys before writing values" time="0.2188" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Invoke-DcRegistryWrites (registry mutator + rollback).rollback when a mid-manifest write fails" executed="True" result="Success" success="True" time="0.7177" asserts="0" description="Invoke-DcRegistryWrites (registry mutator + rollback).rollback when a mid-manifest write fails">
+                <results>
+                  <test-case description="calls Remove-DcPolicy and rethrows" name="Invoke-DcRegistryWrites (registry mutator + rollback).rollback when a mid-manifest write fails.calls Remove-DcPolicy and rethrows" time="0.2" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Invoke-DcRegistryWrites (registry mutator + rollback).WhatIf semantics" executed="True" result="Success" success="True" time="0.8447" asserts="0" description="Invoke-DcRegistryWrites (registry mutator + rollback).WhatIf semantics">
+                <results>
+                  <test-case description="does not invoke New-Item or New-ItemProperty" name="Invoke-DcRegistryWrites (registry mutator + rollback).WhatIf semantics.does not invoke New-Item or New-ItemProperty" time="0.1184" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/Invoke-DefenderDcOnboarding.Tests.ps1" executed="True" result="Success" success="True" time="1.241" asserts="0" description="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/Invoke-DefenderDcOnboarding.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Invoke-DefenderDcOnboarding signature" executed="True" result="Success" success="True" time="0.321" asserts="0" description="Invoke-DefenderDcOnboarding signature">
+            <results>
+              <test-case description="has -OnboardingScript optional string parameter" name="Invoke-DefenderDcOnboarding signature.has -OnboardingScript optional string parameter" time="0.0193" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="has -PostFlightWaitSeconds int parameter (with -SkipPostFlightWait alias)" name="Invoke-DefenderDcOnboarding signature.has -PostFlightWaitSeconds int parameter (with -SkipPostFlightWait alias)" time="0.024" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="has populated comment-based help (SYNOPSIS, DESCRIPTION, &gt;=1 EXAMPLE)" name="Invoke-DefenderDcOnboarding signature.has populated comment-based help (SYNOPSIS, DESCRIPTION, &gt;=1 EXAMPLE)" time="0.1141" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="throws when invoked non-elevated" name="Invoke-DefenderDcOnboarding signature.throws when invoked non-elevated" time="0.1289" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="declares SupportsShouldProcess so -WhatIf is supported" name="Invoke-DefenderDcOnboarding signature.declares SupportsShouldProcess so -WhatIf is supported" time="0.0262" asserts="0" success="True" result="Success" executed="True" />
+            </results>
+          </test-suite>
+          <test-suite type="TestFixture" name="Invoke-DefenderDcOnboarding pre-flight" executed="True" result="Success" success="True" time="0.7895" asserts="0" description="Invoke-DefenderDcOnboarding pre-flight">
+            <results>
+              <test-suite type="TestFixture" name="Invoke-DefenderDcOnboarding pre-flight.when the box is already onboarded (Sense Running + OnboardingState 1)" executed="True" result="Success" success="True" time="0.2542" asserts="0" description="Invoke-DefenderDcOnboarding pre-flight.when the box is already onboarded (Sense Running + OnboardingState 1)">
+                <results>
+                  <test-case description="throws before invoking the onboarding script" name="Invoke-DefenderDcOnboarding pre-flight.when the box is already onboarded (Sense Running + OnboardingState 1).throws before invoking the onboarding script" time="0.2465" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Invoke-DefenderDcOnboarding pre-flight.when invoked with -WhatIf" executed="True" result="Success" success="True" time="0.4631" asserts="0" description="Invoke-DefenderDcOnboarding pre-flight.when invoked with -WhatIf">
+                <results>
+                  <test-case description="skips ZIP extraction, execution, and post-flight work" name="Invoke-DefenderDcOnboarding pre-flight.when invoked with -WhatIf.skips ZIP extraction, execution, and post-flight work" time="0.202" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/Invoke-DefenderDcUsbTest.Tests.ps1" executed="True" result="Success" success="True" time="0.7601" asserts="0" description="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/Invoke-DefenderDcUsbTest.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Invoke-DefenderDcUsbTest signature" executed="True" result="Success" success="True" time="0.2288" asserts="0" description="Invoke-DefenderDcUsbTest signature">
+            <results>
+              <test-suite type="TestFixture" name="Invoke-DefenderDcUsbTest signature.Invoke-DefenderDcUsbTest execution" executed="True" result="Success" success="True" time="0.2231" asserts="0" description="Invoke-DefenderDcUsbTest signature.Invoke-DefenderDcUsbTest execution">
+                <results>
+                  <test-case description="skips policy apply, manual interaction, and rollback under -WhatIf" name="Invoke-DefenderDcUsbTest signature.Invoke-DefenderDcUsbTest execution.skips policy apply, manual interaction, and rollback under -WhatIf" time="0.1126" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-case description="has -Drive parameter (mandatory)" name="Invoke-DefenderDcUsbTest signature.has -Drive parameter (mandatory)" time="0.0089" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="has -StartMode parameter with ValidateSet Audit, Enforce" name="Invoke-DefenderDcUsbTest signature.has -StartMode parameter with ValidateSet Audit, Enforce" time="0.012" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="has -KeepDcApplied switch" name="Invoke-DefenderDcUsbTest signature.has -KeepDcApplied switch" time="0.0071" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="has populated comment-based help (SYNOPSIS, DESCRIPTION, &gt;=1 EXAMPLE)" name="Invoke-DefenderDcUsbTest signature.has populated comment-based help (SYNOPSIS, DESCRIPTION, &gt;=1 EXAMPLE)" time="0.0342" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="throws when invoked non-elevated" name="Invoke-DefenderDcUsbTest signature.throws when invoked non-elevated" time="0.0327" asserts="0" success="True" result="Success" executed="True" />
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/Read-DcPolicyXml.Tests.ps1" executed="True" result="Success" success="True" time="0.1591" asserts="0" description="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/Read-DcPolicyXml.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Read-DcPolicyXml" executed="True" result="Success" success="True" time="0.132" asserts="0" description="Read-DcPolicyXml">
+            <results>
+              <test-case description="returns three Group records from PolicyGroups.xml" name="Read-DcPolicyXml.returns three Group records from PolicyGroups.xml" time="0.034" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="returns three Rule records from PolicyRules.Enforce.xml" name="Read-DcPolicyXml.returns three Rule records from PolicyRules.Enforce.xml" time="0.0174" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="extracts the Group GUIDs from PolicyGroups.xml" name="Read-DcPolicyXml.extracts the Group GUIDs from PolicyGroups.xml" time="0.0088" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="RawXml round-trips: re-parsing it yields the same Id" name="Read-DcPolicyXml.RawXml round-trips: re-parsing it yields the same Id" time="0.0123" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="throws on a missing file" name="Read-DcPolicyXml.throws on a missing file" time="0.0066" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="throws on malformed XML" name="Read-DcPolicyXml.throws on malformed XML" time="0.0126" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="throws when a Group is missing an Id attribute" name="Read-DcPolicyXml.throws when a Group is missing an Id attribute" time="0.0252" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="throws when a PolicyRule has zero Entry elements" name="Read-DcPolicyXml.throws when a PolicyRule has zero Entry elements" time="0.0098" asserts="0" success="True" result="Success" executed="True" />
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/Remove-DcPolicy.Tests.ps1" executed="True" result="Success" success="True" time="0.3424" asserts="0" description="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/Remove-DcPolicy.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Remove-DcPolicy (private; off-mode + rollback path)" executed="True" result="Success" success="True" time="0.2919" asserts="0" description="Remove-DcPolicy (private; off-mode + rollback path)">
+            <results>
+              <test-suite type="TestFixture" name="Remove-DcPolicy (private; off-mode + rollback path).when neither DcRoot nor DcFeatures exist" executed="True" result="Success" success="True" time="0.0392" asserts="0" description="Remove-DcPolicy (private; off-mode + rollback path).when neither DcRoot nor DcFeatures exist">
+                <results>
+                  <test-case description="does not call Remove-Item or Remove-ItemProperty" name="Remove-DcPolicy (private; off-mode + rollback path).when neither DcRoot nor DcFeatures exist.does not call Remove-Item or Remove-ItemProperty" time="0.0343" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Remove-DcPolicy (private; off-mode + rollback path).when only DcRoot exists" executed="True" result="Success" success="True" time="0.1098" asserts="0" description="Remove-DcPolicy (private; off-mode + rollback path).when only DcRoot exists">
+                <results>
+                  <test-case description="removes DcRoot recursively and leaves DcFeatures alone" name="Remove-DcPolicy (private; off-mode + rollback path).when only DcRoot exists.removes DcRoot recursively and leaves DcFeatures alone" time="0.0655" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Remove-DcPolicy (private; off-mode + rollback path).when DcFeatures exists with DeviceControlEnabled present" executed="True" result="Success" success="True" time="0.1858" asserts="0" description="Remove-DcPolicy (private; off-mode + rollback path).when DcFeatures exists with DeviceControlEnabled present">
+                <results>
+                  <test-case description="removes the DeviceControlEnabled property" name="Remove-DcPolicy (private; off-mode + rollback path).when DcFeatures exists with DeviceControlEnabled present.removes the DeviceControlEnabled property" time="0.072" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Remove-DcPolicy (private; off-mode + rollback path).when DcFeatures exists but DeviceControlEnabled is absent" executed="True" result="Success" success="True" time="0.2311" asserts="0" description="Remove-DcPolicy (private; off-mode + rollback path).when DcFeatures exists but DeviceControlEnabled is absent">
+                <results>
+                  <test-case description="does not remove the missing property" name="Remove-DcPolicy (private; off-mode + rollback path).when DcFeatures exists but DeviceControlEnabled is absent.does not remove the missing property" time="0.0414" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Remove-DcPolicy (private; off-mode + rollback path).WhatIf semantics" executed="True" result="Success" success="True" time="0.288" asserts="0" description="Remove-DcPolicy (private; off-mode + rollback path).WhatIf semantics">
+                <results>
+                  <test-case description="does not mutate anything under -WhatIf" name="Remove-DcPolicy (private; off-mode + rollback path).WhatIf semantics.does not mutate anything under -WhatIf" time="0.0519" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/Set-DefenderDcPolicy.Tests.ps1" executed="True" result="Success" success="True" time="0.8146" asserts="0" description="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/Set-DefenderDcPolicy.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Set-DefenderDcPolicy" executed="True" result="Success" success="True" time="0.6893" asserts="0" description="Set-DefenderDcPolicy">
+            <results>
+              <test-suite type="TestFixture" name="Set-DefenderDcPolicy.Mode=Off branch (under elevation, mocked)" executed="True" result="Success" success="True" time="0.1802" asserts="0" description="Set-DefenderDcPolicy.Mode=Off branch (under elevation, mocked)">
+                <results>
+                  <test-case description="calls Remove-DcPolicy and skips XML/manifest pipeline" name="Set-DefenderDcPolicy.Mode=Off branch (under elevation, mocked).calls Remove-DcPolicy and skips XML/manifest pipeline" time="0.0861" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-suite type="TestFixture" name="Set-DefenderDcPolicy.Apply branch with custom XML paths (under elevation, mocked)" executed="True" result="Success" success="True" time="0.6856" asserts="0" description="Set-DefenderDcPolicy.Apply branch with custom XML paths (under elevation, mocked)">
+                <results>
+                  <test-case description="validates + writes the manifest in order" name="Set-DefenderDcPolicy.Apply branch with custom XML paths (under elevation, mocked).validates + writes the manifest in order" time="0.1541" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="-SkipMpCmdRunValidation keeps the public validator but skips the engine-side layer" name="Set-DefenderDcPolicy.Apply branch with custom XML paths (under elevation, mocked).-SkipMpCmdRunValidation keeps the public validator but skips the engine-side layer" time="0.1121" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="does not remove or write policy state under -WhatIf" name="Set-DefenderDcPolicy.Apply branch with custom XML paths (under elevation, mocked).does not remove or write policy state under -WhatIf" time="0.1107" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="throws when Test-DefenderDcPolicyXml returns false" name="Set-DefenderDcPolicy.Apply branch with custom XML paths (under elevation, mocked).throws when Test-DefenderDcPolicyXml returns false" time="0.0869" asserts="0" success="True" result="Success" executed="True" />
+                  <test-case description="throws when Defender AM service is not enabled" name="Set-DefenderDcPolicy.Apply branch with custom XML paths (under elevation, mocked).throws when Defender AM service is not enabled" time="0.0369" asserts="0" success="True" result="Success" executed="True" />
+                </results>
+              </test-suite>
+              <test-case description="has -Mode parameter with ValidateSet Audit, Enforce, Off" name="Set-DefenderDcPolicy.has -Mode parameter with ValidateSet Audit, Enforce, Off" time="0.008" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="has -WhatIf support" name="Set-DefenderDcPolicy.has -WhatIf support" time="0.0063" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="accepts -GroupsXmlPath and -RulesXmlPath parameters" name="Set-DefenderDcPolicy.accepts -GroupsXmlPath and -RulesXmlPath parameters" time="0.0052" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="accepts SkipMpCmdRunValidation + SkipGpUpdate switches" name="Set-DefenderDcPolicy.accepts SkipMpCmdRunValidation + SkipGpUpdate switches" time="0.0052" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="throws when invoked non-elevated (mocked Test-DcIsElevated returns false)" name="Set-DefenderDcPolicy.throws when invoked non-elevated (mocked Test-DcIsElevated returns false)" time="0.0244" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="has populated comment-based help (SYNOPSIS, DESCRIPTION, &gt;=1 EXAMPLE)" name="Set-DefenderDcPolicy.has populated comment-based help (SYNOPSIS, DESCRIPTION, &gt;=1 EXAMPLE)" time="0.0398" asserts="0" success="True" result="Success" executed="True" />
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/Test-DefenderDcPolicy.Tests.ps1" executed="True" result="Success" success="True" time="0.2071" asserts="0" description="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/Test-DefenderDcPolicy.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Test-DefenderDcPolicy" executed="True" result="Success" success="True" time="0.1781" asserts="0" description="Test-DefenderDcPolicy">
+            <results>
+              <test-case description="has -ExpectMode parameter with ValidateSet Audit, Enforce, Off" name="Test-DefenderDcPolicy.has -ExpectMode parameter with ValidateSet Audit, Enforce, Off" time="0.008" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="has -ExpectMode defaulting to Audit" name="Test-DefenderDcPolicy.has -ExpectMode defaulting to Audit" time="0.0051" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="returns a boolean" name="Test-DefenderDcPolicy.returns a boolean" time="0.0095" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="has populated comment-based help (SYNOPSIS, DESCRIPTION, &gt;=1 EXAMPLE)" name="Test-DefenderDcPolicy.has populated comment-based help (SYNOPSIS, DESCRIPTION, &gt;=1 EXAMPLE)" time="0.0336" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="returns true when all checks pass under ExpectMode Off (no policy installed)" name="Test-DefenderDcPolicy.returns true when all checks pass under ExpectMode Off (no policy installed)" time="0.0414" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="returns false when ExpectMode Audit but engine state is Disabled" name="Test-DefenderDcPolicy.returns false when ExpectMode Audit but engine state is Disabled" time="0.0758" asserts="0" success="True" result="Success" executed="True" />
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+      <test-suite type="TestFixture" name="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/Test-DefenderDcPolicyXml.Tests.ps1" executed="True" result="Success" success="True" time="0.1806" asserts="0" description="/home/runner/work/defender-device-control-unmanaged/defender-device-control-unmanaged/src/Tests/Unit/Test-DefenderDcPolicyXml.Tests.ps1">
+        <results>
+          <test-suite type="TestFixture" name="Test-DefenderDcPolicyXml" executed="True" result="Success" success="True" time="0.1466" asserts="0" description="Test-DefenderDcPolicyXml">
+            <results>
+              <test-case description="has -Path and -Kind parameters; -Kind ValidateSet Groups|Rules" name="Test-DefenderDcPolicyXml.has -Path and -Kind parameters; -Kind ValidateSet Groups|Rules" time="0.0083" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="returns boolean" name="Test-DefenderDcPolicyXml.returns boolean" time="0.0043" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="returns $true on the good Groups fixture" name="Test-DefenderDcPolicyXml.returns $true on the good Groups fixture" time="0.024" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="returns $true on the good Rules fixture" name="Test-DefenderDcPolicyXml.returns $true on the good Rules fixture" time="0.0122" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="supports skipping the engine-side validation layer" name="Test-DefenderDcPolicyXml.supports skipping the engine-side validation layer" time="0.0175" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="fails with a BOM-specific error on bad-bom-Groups.xml" name="Test-DefenderDcPolicyXml.fails with a BOM-specific error on bad-bom-Groups.xml" time="0.0096" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="fails with an xml-declaration-specific error on bad-xmldecl-Groups.xml" name="Test-DefenderDcPolicyXml.fails with an xml-declaration-specific error on bad-xmldecl-Groups.xml" time="0.0065" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="fails with a Name-attribute-specific error on bad-name-attr-Rules.xml" name="Test-DefenderDcPolicyXml.fails with a Name-attribute-specific error on bad-name-attr-Rules.xml" time="0.0071" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="fails with an Options-out-of-range error on bad-options-4-Rules.xml" name="Test-DefenderDcPolicyXml.fails with an Options-out-of-range error on bad-options-4-Rules.xml" time="0.0066" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="fails when file does not exist" name="Test-DefenderDcPolicyXml.fails when file does not exist" time="0.0057" asserts="0" success="True" result="Success" executed="True" />
+              <test-case description="has populated comment-based help (SYNOPSIS, DESCRIPTION, &gt;=1 EXAMPLE)" name="Test-DefenderDcPolicyXml.has populated comment-based help (SYNOPSIS, DESCRIPTION, &gt;=1 EXAMPLE)" time="0.0332" asserts="0" success="True" result="Success" executed="True" />
+            </results>
+          </test-suite>
+        </results>
+      </test-suite>
+    </results>
+  </test-suite>
+</test-results>

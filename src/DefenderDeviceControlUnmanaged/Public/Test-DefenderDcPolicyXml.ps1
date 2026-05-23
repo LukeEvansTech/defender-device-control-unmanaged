@@ -22,6 +22,10 @@ function Test-DefenderDcPolicyXml {
 .PARAMETER Kind
     Groups (for a PolicyGroups XML) or Rules (for a PolicyRules XML).
 
+.PARAMETER SkipEngineValidation
+    Skip the final MpCmdRun.exe engine-side validation layer while keeping the
+    file-exists, BOM, xml-declaration, structural, and Rules-specific checks.
+
 .EXAMPLE
     Test-DefenderDcPolicyXml -Path .\MyGroups.xml -Kind Groups
 
@@ -43,7 +47,9 @@ function Test-DefenderDcPolicyXml {
 
         [Parameter(Mandatory)]
         [ValidateSet('Groups','Rules')]
-        [string] $Kind
+        [string] $Kind,
+
+        [switch] $SkipEngineValidation
     )
 
     Set-StrictMode -Version Latest
@@ -108,11 +114,13 @@ function Test-DefenderDcPolicyXml {
     }
 
     # Layer 3: engine-side via MpCmdRun (skipped silently if MpCmdRun absent)
-    try {
-        Test-DcXmlWithMpCmdRun -XmlPath $Path -Kind $Kind
-    } catch {
-        Write-Error "Test-DefenderDcPolicyXml: engine-side validation failed: $($_.Exception.Message)"
-        return $false
+    if (-not $SkipEngineValidation) {
+        try {
+            Test-DcXmlWithMpCmdRun -XmlPath $Path -Kind $Kind
+        } catch {
+            Write-Error "Test-DefenderDcPolicyXml: engine-side validation failed: $($_.Exception.Message)"
+            return $false
+        }
     }
 
     return $true

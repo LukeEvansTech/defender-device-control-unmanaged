@@ -39,6 +39,14 @@ Describe 'Test-DefenderDcPolicyXml' {
         Test-DefenderDcPolicyXml -Path (Join-Path $Fixtures 'good-Rules.xml') -Kind Rules | Should -BeTrue
     }
 
+    It 'supports skipping the engine-side validation layer' {
+        $goodRulesPath = Join-Path $Fixtures 'good-Rules.xml'
+        Test-DefenderDcPolicyXml -Path $goodRulesPath -Kind Rules -SkipEngineValidation | Should -BeTrue
+        InModuleScope DefenderDeviceControlUnmanaged {
+            Should -Invoke Test-DcXmlWithMpCmdRun -Times 0 -Exactly
+        }
+    }
+
     It 'fails with a BOM-specific error on bad-bom-Groups.xml' {
         $result = Test-DefenderDcPolicyXml -Path (Join-Path $Fixtures 'bad-bom-Groups.xml') -Kind Groups -ErrorVariable err -ErrorAction SilentlyContinue
         $result | Should -BeFalse

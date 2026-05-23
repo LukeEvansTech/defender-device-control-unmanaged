@@ -97,12 +97,14 @@ function Set-DefenderDcPolicy {
 
         if ($Mode -eq 'Off') {
             Write-Verbose "Removing Device Control policy."
-            Remove-DcPolicy
-            if (-not $SkipGpUpdate -and $PSCmdlet.ShouldProcess('Group Policy', 'gpupdate /force')) {
-                & gpupdate.exe /force 2>&1 | ForEach-Object { Write-Verbose "  $_" }
-            }
-            if ($PSCmdlet.ShouldProcess('Defender engine', 'Update-MpSignature')) {
-                Update-MpSignature -UpdateSource MMPC -ErrorAction SilentlyContinue
+            if ($PSCmdlet.ShouldProcess('Device Control policy registry', 'Remove policy state')) {
+                Remove-DcPolicy
+                if (-not $SkipGpUpdate -and $PSCmdlet.ShouldProcess('Group Policy', 'gpupdate /force')) {
+                    & gpupdate.exe /force 2>&1 | ForEach-Object { Write-Verbose "  $_" }
+                }
+                if ($PSCmdlet.ShouldProcess('Defender engine', 'Update-MpSignature')) {
+                    Update-MpSignature -UpdateSource MMPC -ErrorAction SilentlyContinue
+                }
             }
             return
         }
@@ -126,33 +128,28 @@ function Set-DefenderDcPolicy {
         # xml-declaration / PolicyRule.Name-as-child / Options-bitmask checks on
         # top of Read-DcPolicyXml + MpCmdRun) so a caller-supplied XML faces the
         # same contract whether they ran Test-DefenderDcPolicyXml first or not.
-        if (-not $SkipMpCmdRunValidation) {
-            if (-not (Test-DefenderDcPolicyXml -Path $GroupsXmlPath -Kind Groups)) {
-                throw "Set-DefenderDcPolicy: GroupsXmlPath failed validation: $GroupsXmlPath"
-            }
-            if (-not (Test-DefenderDcPolicyXml -Path $RulesXmlPath -Kind Rules)) {
-                throw "Set-DefenderDcPolicy: RulesXmlPath failed validation: $RulesXmlPath"
-            }
-        } else {
-            # Even with -SkipMpCmdRunValidation, run Read-DcPolicyXml so structural
-            # XML faults are caught before we touch HKLM.
-            Read-DcPolicyXml -Path $GroupsXmlPath | Out-Null
-            Read-DcPolicyXml -Path $RulesXmlPath  | Out-Null
+        if (-not (Test-DefenderDcPolicyXml -Path $GroupsXmlPath -Kind Groups -SkipEngineValidation:$SkipMpCmdRunValidation)) {
+            throw "Set-DefenderDcPolicy: GroupsXmlPath failed validation: $GroupsXmlPath"
+        }
+        if (-not (Test-DefenderDcPolicyXml -Path $RulesXmlPath -Kind Rules -SkipEngineValidation:$SkipMpCmdRunValidation)) {
+            throw "Set-DefenderDcPolicy: RulesXmlPath failed validation: $RulesXmlPath"
         }
 
         $manifest = Get-DcRegistryManifest -GroupsXmlPath $GroupsXmlPath -RulesXmlPath $RulesXmlPath
 
-        Write-Verbose "Removing any prior Device Control policy state before re-applying."
-        Remove-DcPolicy
+        if ($PSCmdlet.ShouldProcess('Device Control policy registry', "Apply $Mode policy state")) {
+            Write-Verbose "Removing any prior Device Control policy state before re-applying."
+            Remove-DcPolicy
 
-        Invoke-DcRegistryWrites -Manifest $manifest
+            Invoke-DcRegistryWrites -Manifest $manifest
 
-        if (-not $SkipGpUpdate -and $PSCmdlet.ShouldProcess('Group Policy', 'gpupdate /force')) {
-            & gpupdate.exe /force 2>&1 | ForEach-Object { Write-Verbose "  $_" }
-        }
+            if (-not $SkipGpUpdate -and $PSCmdlet.ShouldProcess('Group Policy', 'gpupdate /force')) {
+                & gpupdate.exe /force 2>&1 | ForEach-Object { Write-Verbose "  $_" }
+            }
 
-        if ($PSCmdlet.ShouldProcess('Defender engine', 'Update-MpSignature')) {
-            Update-MpSignature -UpdateSource MMPC -ErrorAction SilentlyContinue
+            if ($PSCmdlet.ShouldProcess('Defender engine', 'Update-MpSignature')) {
+                Update-MpSignature -UpdateSource MMPC -ErrorAction SilentlyContinue
+            }
         }
     }
     finally {

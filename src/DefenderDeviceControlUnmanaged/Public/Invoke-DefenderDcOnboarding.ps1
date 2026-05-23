@@ -139,66 +139,72 @@ function Invoke-DefenderDcOnboarding {
             $zipPath = $newest.FullName
         }
 
-        if ($zipPath) {
-            $extractedTemp = Join-Path $env:TEMP "mde-onboard-$ts"
-            New-Item -ItemType Directory -Path $extractedTemp | Out-Null
-            Expand-Archive -LiteralPath $zipPath -DestinationPath $extractedTemp -Force
-            $found = Get-ChildItem -LiteralPath $extractedTemp -Filter 'WindowsDefenderATP*OnboardingScript.cmd' -Recurse | Select-Object -First 1
-            if (-not $found) { throw "Extracted ZIP did not contain WindowsDefenderATP*OnboardingScript.cmd" }
-            $cmdPath = $found.FullName
-        }
-        Write-Host "  Using script: $cmdPath" -ForegroundColor DarkGray
+        $shouldRunOnboarding = $PSCmdlet.ShouldProcess(
+            $(if ($cmdPath) { $cmdPath } else { $zipPath }),
+            'Run MDE onboarding script (cmd.exe)')
 
-        Write-Host ""
-        Write-Host "[3/4] Run onboarding script (elevated)" -ForegroundColor Cyan
-        Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
-        $scriptExit = 0
-        if ($PSCmdlet.ShouldProcess($cmdPath, 'Run MDE onboarding script (cmd.exe)')) {
+        if ($shouldRunOnboarding) {
+            if ($zipPath) {
+                $extractedTemp = Join-Path $env:TEMP "mde-onboard-$ts"
+                New-Item -ItemType Directory -Path $extractedTemp | Out-Null
+                Expand-Archive -LiteralPath $zipPath -DestinationPath $extractedTemp -Force
+                $found = Get-ChildItem -LiteralPath $extractedTemp -Filter 'WindowsDefenderATP*OnboardingScript.cmd' -Recurse | Select-Object -First 1
+                if (-not $found) { throw "Extracted ZIP did not contain WindowsDefenderATP*OnboardingScript.cmd" }
+                $cmdPath = $found.FullName
+            }
+            Write-Host "  Using script: $cmdPath" -ForegroundColor DarkGray
+
+            Write-Host ""
+            Write-Host "[3/4] Run onboarding script (elevated)" -ForegroundColor Cyan
+            Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+            $scriptExit = 0
             & cmd.exe /c "`"$cmdPath`""
             $scriptExit = $LASTEXITCODE
-        }
-        Write-Host "  Onboarding script exit code: $scriptExit" -ForegroundColor DarkGray
-        if ($scriptExit -ne 0) {
-            Write-Host "  Onboarding script returned non-zero. Proceeding to post-flight to capture actual state." -ForegroundColor Yellow
-        }
+            Write-Host "  Onboarding script exit code: $scriptExit" -ForegroundColor DarkGray
+            if ($scriptExit -ne 0) {
+                Write-Host "  Onboarding script returned non-zero. Proceeding to post-flight to capture actual state." -ForegroundColor Yellow
+            }
 
-        Write-Host "  Settling $PostFlightWaitSeconds seconds before post-flight checks..." -ForegroundColor DarkGray
-        Start-Sleep -Seconds $PostFlightWaitSeconds
+            Write-Host "  Settling $PostFlightWaitSeconds seconds before post-flight checks..." -ForegroundColor DarkGray
+            Start-Sleep -Seconds $PostFlightWaitSeconds
 
-        Write-Host ""
-        Write-Host "[4/4] Post-flight verification" -ForegroundColor Cyan
-        Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
-        $senseAfter = Get-Service -Name Sense -ErrorAction SilentlyContinue
-        Write-DcCheckResult 'Sense.Status = Running' { $senseAfter -and $senseAfter.Status -eq 'Running' } 'Sense service did not reach Running state' $failureRef
-        Write-DcCheckResult 'Sense.StartType = Automatic' { $senseAfter -and $senseAfter.StartType -eq 'Automatic' } 'Sense start type should be Automatic post-onboarding' $failureRef
+            Write-Host ""
+            Write-Host "[4/4] Post-flight verification" -ForegroundColor Cyan
+            Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+            $senseAfter = Get-Service -Name Sense -ErrorAction SilentlyContinue
+            Write-DcCheckResult 'Sense.Status = Running' { $senseAfter -and $senseAfter.Status -eq 'Running' } 'Sense service did not reach Running state' $failureRef
+            Write-DcCheckResult 'Sense.StartType = Automatic' { $senseAfter -and $senseAfter.StartType -eq 'Automatic' } 'Sense start type should be Automatic post-onboarding' $failureRef
 
-        if (Test-Path -LiteralPath $watpStatus) {
-            $obs = (Get-ItemProperty -LiteralPath $watpStatus -Name OnboardingState -ErrorAction SilentlyContinue).OnboardingState
-            if ($null -ne $obs) { $obsAfter = [int]$obs }
-        }
-        Write-DcCheckResult 'OnboardingState = 1' { $obsAfter -eq 1 } "expected 1, got '$obsAfter'" $failureRef
+            if (Test-Path -LiteralPath $watpStatus) {
+                $obs = (Get-ItemProperty -LiteralPath $watpStatus -Name OnboardingState -ErrorAction SilentlyContinue).OnboardingState
+                if ($null -ne $obs) { $obsAfter = [int]$obs }
+            }
+            Write-DcCheckResult 'OnboardingState = 1' { $obsAfter -eq 1 } "expected 1, got '$obsAfter'" $failureRef
 
-        if (Test-Path -LiteralPath $watpStatus) {
-            $orgId = (Get-ItemProperty -LiteralPath $watpStatus -Name OrgId -ErrorAction SilentlyContinue).OrgId
-        }
-        Write-DcCheckResult 'OrgId is populated' { -not [string]::IsNullOrEmpty($orgId) } 'OrgId must be a non-empty string' $failureRef
+            if (Test-Path -LiteralPath $watpStatus) {
+                $orgId = (Get-ItemProperty -LiteralPath $watpStatus -Name OrgId -ErrorAction SilentlyContinue).OrgId
+            }
+            Write-DcCheckResult 'OrgId is populated' { -not [string]::IsNullOrEmpty($orgId) } 'OrgId must be a non-empty string' $failureRef
 
-        Write-Host ""
-        Write-Host "Final state:" -ForegroundColor Yellow
-        Write-Host "  Sense.Status     : $(if ($senseAfter) { $senseAfter.Status } else { '(missing)' })" -ForegroundColor DarkGray
-        Write-Host "  Sense.StartType  : $(if ($senseAfter) { $senseAfter.StartType } else { '(missing)' })" -ForegroundColor DarkGray
-        Write-Host "  OnboardingState  : $obsAfter" -ForegroundColor DarkGray
-        Write-Host "  OrgId            : $orgId" -ForegroundColor DarkGray
+            Write-Host ""
+            Write-Host "Final state:" -ForegroundColor Yellow
+            Write-Host "  Sense.Status     : $(if ($senseAfter) { $senseAfter.Status } else { '(missing)' })" -ForegroundColor DarkGray
+            Write-Host "  Sense.StartType  : $(if ($senseAfter) { $senseAfter.StartType } else { '(missing)' })" -ForegroundColor DarkGray
+            Write-Host "  OnboardingState  : $obsAfter" -ForegroundColor DarkGray
+            Write-Host "  OrgId            : $orgId" -ForegroundColor DarkGray
 
-        Write-Host ""
-        Write-Host "================================================================" -ForegroundColor Cyan
-        if ($failureRef.Value -eq 0) {
-            Write-Host " Invoke-DefenderDcOnboarding: ALL CHECKS PASSED" -ForegroundColor Green
+            Write-Host ""
+            Write-Host "================================================================" -ForegroundColor Cyan
+            if ($failureRef.Value -eq 0) {
+                Write-Host " Invoke-DefenderDcOnboarding: ALL CHECKS PASSED" -ForegroundColor Green
+            } else {
+                Write-Host " Invoke-DefenderDcOnboarding: $($failureRef.Value) CHECKS FAILED" -ForegroundColor Red
+            }
+            Write-Host " Transcript: $transcript" -ForegroundColor Cyan
+            Write-Host "================================================================" -ForegroundColor Cyan
         } else {
-            Write-Host " Invoke-DefenderDcOnboarding: $($failureRef.Value) CHECKS FAILED" -ForegroundColor Red
+            Write-Host "  Preview only; skipping ZIP extraction, script execution, wait, and post-flight checks." -ForegroundColor Yellow
         }
-        Write-Host " Transcript: $transcript" -ForegroundColor Cyan
-        Write-Host "================================================================" -ForegroundColor Cyan
     }
     finally {
         if ($extractedTemp -and (Test-Path -LiteralPath $extractedTemp)) {

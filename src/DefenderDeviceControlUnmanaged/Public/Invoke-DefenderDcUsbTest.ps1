@@ -113,68 +113,72 @@ function Invoke-DefenderDcUsbTest {
         $preMode  = $preState.Mode
         Write-Host "  Pre-test DC mode: $preMode" -ForegroundColor DarkGray
 
-        # --- Phase 3: Apply DC at StartMode ---
-        Write-Host ""
-        Write-Host "[3/7] Apply DC -Mode $StartMode" -ForegroundColor Cyan
-        Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
-        Set-DefenderDcPolicy -Mode $StartMode
+        if ($PSCmdlet.ShouldProcess($drivePath, "Run USB Device Control test in $StartMode mode")) {
+            # --- Phase 3: Apply DC at StartMode ---
+            Write-Host ""
+            Write-Host "[3/7] Apply DC -Mode $StartMode" -ForegroundColor Cyan
+            Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+            Set-DefenderDcPolicy -Mode $StartMode
 
-        # --- Phase 4: Verify static state ---
-        Write-Host ""
-        Write-Host "[4/7] Verify static state" -ForegroundColor Cyan
-        Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
-        $verifyResult = Test-DefenderDcPolicy -ExpectMode $StartMode
-        Write-DcCheckResult "Static verification passes for $StartMode" { $verifyResult } "Test-DefenderDcPolicy returned false" $failureRef
+            # --- Phase 4: Verify static state ---
+            Write-Host ""
+            Write-Host "[4/7] Verify static state" -ForegroundColor Cyan
+            Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+            $verifyResult = Test-DefenderDcPolicy -ExpectMode $StartMode
+            Write-DcCheckResult "Static verification passes for $StartMode" { $verifyResult } "Test-DefenderDcPolicy returned false" $failureRef
 
-        # --- Phase 5: Operator interactive ---
-        Write-Host ""
-        Write-Host "[5/7] Operator interactive test" -ForegroundColor Cyan
-        Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
-        Write-Host "  Action required:" -ForegroundColor Yellow
-        Write-Host "    1. Unplug the USB stick from $drivePath (if currently mounted)." -ForegroundColor Yellow
-        Write-Host "    2. Plug it back in. Wait for the drive letter to appear." -ForegroundColor Yellow
-        Write-Host "    3. Open a file from $drivePath (read should always work)." -ForegroundColor Yellow
-        Write-Host "    4. Try to copy a file TO $drivePath." -ForegroundColor Yellow
-        Write-Host "         Audit:   succeeds, telemetry recorded in Defender XDR." -ForegroundColor Yellow
-        Write-Host "         Enforce: fails with 'The media is write protected'." -ForegroundColor Yellow
-        Write-Host ""
-        $startTime = Get-Date
-        Read-Host "  Press ENTER when finished with the manual test"
+            # --- Phase 5: Operator interactive ---
+            Write-Host ""
+            Write-Host "[5/7] Operator interactive test" -ForegroundColor Cyan
+            Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+            Write-Host "  Action required:" -ForegroundColor Yellow
+            Write-Host "    1. Unplug the USB stick from $drivePath (if currently mounted)." -ForegroundColor Yellow
+            Write-Host "    2. Plug it back in. Wait for the drive letter to appear." -ForegroundColor Yellow
+            Write-Host "    3. Open a file from $drivePath (read should always work)." -ForegroundColor Yellow
+            Write-Host "    4. Try to copy a file TO $drivePath." -ForegroundColor Yellow
+            Write-Host "         Audit:   succeeds, telemetry recorded in Defender XDR." -ForegroundColor Yellow
+            Write-Host "         Enforce: fails with 'The media is write protected'." -ForegroundColor Yellow
+            Write-Host ""
+            $startTime = Get-Date
+            Read-Host "  Press ENTER when finished with the manual test"
 
-        # --- Phase 6: Read event-log signal (best-effort) ---
-        Write-Host ""
-        Write-Host "[6/7] Defender event-log lookup (last 2 minutes)" -ForegroundColor Cyan
-        Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
-        try {
-            $events = @(Get-WinEvent -LogName 'Microsoft-Windows-Windows Defender/Operational' -MaxEvents 100 -ErrorAction SilentlyContinue |
-                Where-Object { $_.Id -in @(1109, 1110, 1111) } |
-                Where-Object { $_.TimeCreated -gt $startTime.AddMinutes(-2) })
-            $eventsCaptured = $events.Count
-            Write-Host "  Events 1109/1110/1111 captured: $eventsCaptured" -ForegroundColor DarkGray
-            if ($eventsCaptured -eq 0) {
-                Write-Host "  (Modern MDE builds route DC events to Defender XDR Advanced Hunting only;" -ForegroundColor Yellow
-                Write-Host "   zero local events is informational, not a failure. Check security.microsoft.com" -ForegroundColor Yellow
-                Write-Host "   DeviceEvents | where ActionType == 'RemovableStoragePolicyTriggered' for evidence.)" -ForegroundColor Yellow
-            } else {
-                $events | ForEach-Object { Write-Host "    $($_.TimeCreated)  Id=$($_.Id)" -ForegroundColor DarkGray }
+            # --- Phase 6: Read event-log signal (best-effort) ---
+            Write-Host ""
+            Write-Host "[6/7] Defender event-log lookup (last 2 minutes)" -ForegroundColor Cyan
+            Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+            try {
+                $events = @(Get-WinEvent -LogName 'Microsoft-Windows-Windows Defender/Operational' -MaxEvents 100 -ErrorAction SilentlyContinue |
+                    Where-Object { $_.Id -in @(1109, 1110, 1111) } |
+                    Where-Object { $_.TimeCreated -gt $startTime.AddMinutes(-2) })
+                $eventsCaptured = $events.Count
+                Write-Host "  Events 1109/1110/1111 captured: $eventsCaptured" -ForegroundColor DarkGray
+                if ($eventsCaptured -eq 0) {
+                    Write-Host "  (Modern MDE builds route DC events to Defender XDR Advanced Hunting only;" -ForegroundColor Yellow
+                    Write-Host "   zero local events is informational, not a failure. Check security.microsoft.com" -ForegroundColor Yellow
+                    Write-Host "   DeviceEvents | where ActionType == 'RemovableStoragePolicyTriggered' for evidence.)" -ForegroundColor Yellow
+                } else {
+                    $events | ForEach-Object { Write-Host "    $($_.TimeCreated)  Id=$($_.Id)" -ForegroundColor DarkGray }
+                }
+            } catch {
+                Write-Host "  (Event log lookup failed: $($_.Exception.Message))" -ForegroundColor Yellow
             }
-        } catch {
-            Write-Host "  (Event log lookup failed: $($_.Exception.Message))" -ForegroundColor Yellow
-        }
 
-        # --- Phase 7: Restore (unless KeepDcApplied) ---
-        Write-Host ""
-        Write-Host "[7/7] Restore pre-test DC state" -ForegroundColor Cyan
-        Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
-        if ($KeepDcApplied) {
-            Write-Host "  -KeepDcApplied set; leaving DC at $StartMode." -ForegroundColor Yellow
+            # --- Phase 7: Restore (unless KeepDcApplied) ---
+            Write-Host ""
+            Write-Host "[7/7] Restore pre-test DC state" -ForegroundColor Cyan
+            Write-Host "----------------------------------------------------------------" -ForegroundColor DarkGray
+            if ($KeepDcApplied) {
+                Write-Host "  -KeepDcApplied set; leaving DC at $StartMode." -ForegroundColor Yellow
+            } else {
+                if ($null -eq $preMode -or $preMode -eq $StartMode) {
+                    Write-Host "  Pre-test mode equals StartMode ($preMode); no rollback needed." -ForegroundColor DarkGray
+                } else {
+                    Write-Host "  Rolling back to $preMode." -ForegroundColor DarkGray
+                    Set-DefenderDcPolicy -Mode $preMode
+                }
+            }
         } else {
-            if ($null -eq $preMode -or $preMode -eq $StartMode) {
-                Write-Host "  Pre-test mode equals StartMode ($preMode); no rollback needed." -ForegroundColor DarkGray
-            } else {
-                Write-Host "  Rolling back to $preMode." -ForegroundColor DarkGray
-                Set-DefenderDcPolicy -Mode $preMode
-            }
+            Write-Host "  Preview only; skipping policy apply, manual prompt, event lookup, and rollback." -ForegroundColor Yellow
         }
 
         Write-Host ""
