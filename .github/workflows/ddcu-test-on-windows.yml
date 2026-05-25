@@ -12,16 +12,19 @@ permissions:
 jobs:
   pester-pwsh:
     name: Pester (PowerShell 7.x)
-    runs-on: windows-latest
+    runs-on: windows-2025
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
 
       - name: Install Pester 5.x
         shell: pwsh
         run: |
+          # Force TLS 1.2 before any PSGallery call. Harmless on pwsh 7+
+          # (already the default) but kept symmetric with the 5.1 job below.
+          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
           Install-Module -Name Pester -MinimumVersion 5.5.0 -Force -SkipPublisherCheck -Scope CurrentUser
 
       - name: Import module (smoke check)
@@ -51,7 +54,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: pester-pwsh
           path: |
@@ -61,16 +64,22 @@ jobs:
 
   pester-windows-powershell:
     name: Pester (Windows PowerShell 5.1)
-    runs-on: windows-latest
+    runs-on: windows-2025
     steps:
       - name: Checkout
-        uses: actions/checkout@v4
+        uses: actions/checkout@v5
         with:
           persist-credentials: false
 
       - name: Install Pester 5.x
         shell: powershell
         run: |
+          # Windows PowerShell 5.1 negotiates TLS 1.0 by default; the
+          # PowerShell Gallery rejects anything below TLS 1.2 and surfaces
+          # the failure as a flaky "No match was found for the specified
+          # search criteria and module name 'Pester'." Pin TLS 1.2 before
+          # any web call.
+          [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
           Install-Module -Name Pester -MinimumVersion 5.5.0 -Force -SkipPublisherCheck -Scope CurrentUser
 
       - name: Import module (smoke check)
@@ -100,7 +109,7 @@ jobs:
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: pester-powershell
           path: |
