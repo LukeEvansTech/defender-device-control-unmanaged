@@ -76,5 +76,26 @@ Describe 'Invoke-DefenderDcUsbTest signature' {
                 Should -Invoke Get-WinEvent          -Times 0 -Exactly
             }
         }
+
+        Context 'Regression: -WhatIf with unmocked Start/Stop-Transcript (Windows-only)' {
+            # See Set-DefenderDcPolicy.Tests.ps1 for the full rationale. The
+            # Start-Transcript / Stop-Transcript pair under -WhatIf raised
+            # "host is not currently transcribing" from the finally block.
+            It '-WhatIf completes without throwing when transcript helpers are not mocked' -Skip:($env:OS -ne 'Windows_NT') {
+                InModuleScope DefenderDeviceControlUnmanaged {
+                    Mock Test-DcIsElevated { $true }
+                    Mock Get-DcComputerStatus { [pscustomobject]@{ AMServiceEnabled = $true } }
+                    Mock Get-Service { [pscustomobject]@{ Name = 'Sense'; Status = 'Running' } } -ParameterFilter { $Name -eq 'Sense' }
+                    Mock Get-DefenderDcPolicy { [pscustomobject]@{ Mode = 'Off' } }
+                    Mock Set-DefenderDcPolicy { }
+                    Mock Test-DefenderDcPolicy { $true }
+                    Mock Read-Host { }
+                    Mock Get-WinEvent { @() }
+                    # Deliberately NOT mocking Start-DcTranscript / Stop-Transcript.
+
+                    { Invoke-DefenderDcUsbTest -Drive E -WhatIf } | Should -Not -Throw
+                }
+            }
+        }
     }
 }
