@@ -1,6 +1,14 @@
 BeforeAll {
     $script:ModuleManifest = Join-Path $PSScriptRoot '..\..\DefenderDeviceControlUnmanaged\DefenderDeviceControlUnmanaged.psd1'
     Import-Module $ModuleManifest -Force
+
+    # Get-Service / Stop-Transcript ship with PowerShell on Windows but not always on macOS;
+    # stub them so InModuleScope tests can Mock them on cross-platform CI.
+    InModuleScope DefenderDeviceControlUnmanaged {
+        if (-not (Get-Command Get-Service -ErrorAction SilentlyContinue)) {
+            function global:Get-Service { param($Name, [switch]$ErrorAction) }
+        }
+    }
 }
 
 AfterAll {
@@ -17,11 +25,12 @@ Describe 'Invoke-DefenderDcOnboarding signature' {
         $isMandatory | Should -BeFalse
     }
 
-    It 'has -SkipPostFlightWait int parameter with default 30' {
+    It 'has -PostFlightWaitSeconds int parameter (with -SkipPostFlightWait alias)' {
         $cmd = Get-Command Invoke-DefenderDcOnboarding
-        $param = $cmd.Parameters['SkipPostFlightWait']
+        $param = $cmd.Parameters['PostFlightWaitSeconds']
         $param | Should -Not -BeNullOrEmpty
         $param.ParameterType | Should -Be ([int])
+        $param.Aliases | Should -Contain 'SkipPostFlightWait'
     }
 
     It 'has populated comment-based help (SYNOPSIS, DESCRIPTION, >=1 EXAMPLE)' {
@@ -33,8 +42,65 @@ Describe 'Invoke-DefenderDcOnboarding signature' {
 
     It 'throws when invoked non-elevated' {
         InModuleScope DefenderDeviceControlUnmanaged {
-            Mock Test-IsElevated { $false }
+            Mock Test-DcIsElevated { $false }
             { Invoke-DefenderDcOnboarding } | Should -Throw -ExpectedMessage '*elevated*'
+        }
+    }
+
+    It 'declares SupportsShouldProcess so -WhatIf is supported' {
+        $cmd = Get-Command Invoke-DefenderDcOnboarding
+        $cmd.Parameters.ContainsKey('WhatIf') | Should -BeTrue
+    }
+}
+
+Describe 'Invoke-DefenderDcOnboarding pre-flight' {
+    Context 'when the box is already onboarded (Sense Running + OnboardingState 1)' {
+        It 'throws before invoking the onboarding script' {
+            InModuleScope DefenderDeviceControlUnmanaged {
+                Mock Test-DcIsElevated { $true }
+                Mock Start-DcTranscript { '/tmp/fake.transcript.txt' }
+                Mock Stop-Transcript { }
+                Mock Get-DcComputerStatus {
+                    [pscustomobject]@{ AMServiceEnabled = $true; AMEngineVersion = '0.0'; AMProductVersion = '0.0'; IsTamperProtected = $false }
+                }
+                Mock Get-Service {
+                    [pscustomobject]@{ Name = 'Sense'; Status = 'Running' }
+                } -ParameterFilter { $Name -eq 'Sense' }
+                Mock Test-Path { $true } -ParameterFilter { $LiteralPath -like '*Windows Advanced Threat Protection\Status' }
+                Mock Get-ItemProperty {
+                    [pscustomobject]@{ OnboardingState = 1 }
+                } -ParameterFilter { $Name -eq 'OnboardingState' }
+
+                { Invoke-DefenderDcOnboarding } | Should -Throw -ExpectedMessage '*already onboarded*'
+            }
+        }
+    }
+
+    Context 'when invoked with -WhatIf' {
+        It 'skips ZIP extraction, execution, and post-flight work' {
+            InModuleScope DefenderDeviceControlUnmanaged {
+                Mock Test-DcIsElevated { $true }
+                Mock Start-DcTranscript { '/tmp/fake.transcript.txt' }
+                Mock Stop-Transcript { }
+                Mock Get-DcComputerStatus {
+                    [pscustomobject]@{ AMServiceEnabled = $true; AMEngineVersion = '0.0'; AMProductVersion = '0.0'; IsTamperProtected = $false }
+                }
+                Mock Get-Service {
+                    [pscustomobject]@{ Name = 'Sense'; Status = 'Stopped' }
+                } -ParameterFilter { $Name -eq 'Sense' }
+                Mock Test-Path { $true }
+                Mock Get-ItemProperty {
+                    [pscustomobject]@{ OnboardingState = 0 }
+                } -ParameterFilter { $Name -eq 'OnboardingState' }
+                Mock Expand-Archive { }
+                Mock Start-Sleep { }
+
+                $result = Invoke-DefenderDcOnboarding -OnboardingScript '/tmp/onboarding.zip' -WhatIf
+
+                $result.Failures | Should -Be 0
+                Should -Invoke Expand-Archive -Times 0 -Exactly
+                Should -Invoke Start-Sleep    -Times 0 -Exactly
+            }
         }
     }
 }

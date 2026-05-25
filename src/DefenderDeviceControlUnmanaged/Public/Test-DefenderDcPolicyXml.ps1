@@ -22,6 +22,10 @@ function Test-DefenderDcPolicyXml {
 .PARAMETER Kind
     Groups (for a PolicyGroups XML) or Rules (for a PolicyRules XML).
 
+.PARAMETER SkipEngineValidation
+    Skip the final MpCmdRun.exe engine-side validation layer while keeping the
+    file-exists, BOM, xml-declaration, structural, and Rules-specific checks.
+
 .EXAMPLE
     Test-DefenderDcPolicyXml -Path .\MyGroups.xml -Kind Groups
 
@@ -38,8 +42,14 @@ function Test-DefenderDcPolicyXml {
     [CmdletBinding()]
     [OutputType([bool])]
     param(
-        [Parameter(Mandatory)][string] $Path,
-        [Parameter(Mandatory)][ValidateSet('Groups','Rules')][string] $Kind
+        [Parameter(Mandatory)]
+        [string] $Path,
+
+        [Parameter(Mandatory)]
+        [ValidateSet('Groups','Rules')]
+        [string] $Kind,
+
+        [switch] $SkipEngineValidation
     )
 
     Set-StrictMode -Version Latest
@@ -103,12 +113,26 @@ function Test-DefenderDcPolicyXml {
         }
     }
 
-    # Layer 3: engine-side via MpCmdRun (skipped silently if MpCmdRun absent)
+    # Layer 2d: structural per-element checks via Read-DcPolicyXml — runs even when
+    # -SkipEngineValidation is set so callers (e.g. Set-DefenderDcPolicy
+    # -SkipMpCmdRunValidation) still get "every PolicyRule has at least one <Entry>"
+    # and "every Group/PolicyRule has an Id attribute" enforcement before any
+    # registry writes happen.
     try {
-        Test-DcXmlWithMpCmdRun -XmlPath $Path -Kind $Kind
+        Read-DcPolicyXml -Path $Path | Out-Null
     } catch {
-        Write-Error "Test-DefenderDcPolicyXml: engine-side validation failed: $($_.Exception.Message)"
+        Write-Error "Test-DefenderDcPolicyXml: structural validation failed: $($_.Exception.Message)"
         return $false
+    }
+
+    # Layer 3: engine-side via MpCmdRun (skipped silently if MpCmdRun absent)
+    if (-not $SkipEngineValidation) {
+        try {
+            Test-DcXmlWithMpCmdRun -XmlPath $Path -Kind $Kind
+        } catch {
+            Write-Error "Test-DefenderDcPolicyXml: engine-side validation failed: $($_.Exception.Message)"
+            return $false
+        }
     }
 
     return $true

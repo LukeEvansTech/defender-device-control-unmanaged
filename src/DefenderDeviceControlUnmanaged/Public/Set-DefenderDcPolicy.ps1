@@ -78,65 +78,85 @@ function Set-DefenderDcPolicy {
     Set-StrictMode -Version Latest
     $ErrorActionPreference = 'Stop'
 
-    if (-not (Test-IsElevated)) { throw "Set-DefenderDcPolicy: must be run elevated." }
+    if (-not (Test-DcIsElevated)) { throw "Set-DefenderDcPolicy: must be run elevated." }
 
-    try { $defender = Get-DcComputerStatus } catch {
-        throw "Set-DefenderDcPolicy: Get-MpComputerStatus failed: $($_.Exception.Message)"
-    }
-    if (-not $defender.AMServiceEnabled) { throw "Set-DefenderDcPolicy: Defender service not enabled." }
-    Write-Verbose "Defender AM engine $($defender.AMEngineVersion), TamperProtection=$($defender.IsTamperProtected)"
-
-    if ($Mode -eq 'Off') {
-        Write-Verbose "Removing Device Control policy."
-        Remove-DcPolicy
-        if (-not $SkipGpUpdate -and $PSCmdlet.ShouldProcess('Group Policy', 'gpupdate /force')) {
-            & gpupdate.exe /force 2>&1 | ForEach-Object { Write-Verbose "  $_" }
+    $transcript = Start-DcTranscript -CmdletName 'Set-DefenderDcPolicy'
+    try {
+        try { $defender = Get-DcComputerStatus } catch {
+            # Wrap the original ErrorRecord so the caller still has the typed exception + stack trace.
+            throw [System.Management.Automation.ErrorRecord]::new(
+                [System.InvalidOperationException]::new(
+                    "Set-DefenderDcPolicy: Get-MpComputerStatus failed: $($_.Exception.Message)",
+                    $_.Exception),
+                'DefenderDeviceControlUnmanaged.DefenderQueryFailed',
+                [System.Management.Automation.ErrorCategory]::ResourceUnavailable,
+                $null)
         }
-        if ($PSCmdlet.ShouldProcess('Defender engine', 'Update-MpSignature')) {
-            Update-MpSignature -UpdateSource MMPC -ErrorAction SilentlyContinue
-        }
-        return
-    }
+        if (-not $defender.AMServiceEnabled) { throw "Set-DefenderDcPolicy: Defender service not enabled." }
+        Write-Verbose "Defender AM engine $($defender.AMEngineVersion), TamperProtection=$($defender.IsTamperProtected)"
 
-    $defaultPolicyDir = Join-Path $PSScriptRoot '..\policy'
-    if (-not $GroupsXmlPath) { $GroupsXmlPath = [System.IO.Path]::GetFullPath((Join-Path $defaultPolicyDir 'PolicyGroups.xml')) }
-    if (-not $RulesXmlPath)  { $RulesXmlPath  = [System.IO.Path]::GetFullPath((Join-Path $defaultPolicyDir "PolicyRules.$Mode.xml")) }
-    if (-not [System.IO.Path]::IsPathRooted($GroupsXmlPath)) {
+        if ($Mode -eq 'Off') {
+            Write-Verbose "Removing Device Control policy."
+            if ($PSCmdlet.ShouldProcess('Device Control policy registry', 'Remove policy state')) {
+                Remove-DcPolicy
+                if (-not $SkipGpUpdate -and $PSCmdlet.ShouldProcess('Group Policy', 'gpupdate /force')) {
+                    & gpupdate.exe /force 2>&1 | ForEach-Object { Write-Verbose "  $_" }
+                }
+                if ($PSCmdlet.ShouldProcess('Defender engine', 'Update-MpSignature')) {
+                    Update-MpSignature -UpdateSource MMPC -ErrorAction SilentlyContinue
+                }
+            }
+            return
+        }
+
+        $defaultPolicyDir = Join-Path $PSScriptRoot '..\policy'
+        if (-not $GroupsXmlPath) { $GroupsXmlPath = Join-Path $defaultPolicyDir 'PolicyGroups.xml' }
+        if (-not $RulesXmlPath)  { $RulesXmlPath  = Join-Path $defaultPolicyDir "PolicyRules.$Mode.xml" }
         $GroupsXmlPath = [System.IO.Path]::GetFullPath($GroupsXmlPath)
-    }
-    if (-not [System.IO.Path]::IsPathRooted($RulesXmlPath)) {
-        $RulesXmlPath = [System.IO.Path]::GetFullPath($RulesXmlPath)
-    }
+        $RulesXmlPath  = [System.IO.Path]::GetFullPath($RulesXmlPath)
 
-    foreach ($p in $GroupsXmlPath, $RulesXmlPath) {
-        if (-not (Test-Path -LiteralPath $p -PathType Leaf)) {
-            throw "Set-DefenderDcPolicy: required policy file not found: $p"
+        foreach ($p in $GroupsXmlPath, $RulesXmlPath) {
+            if (-not (Test-Path -LiteralPath $p -PathType Leaf)) {
+                throw "Set-DefenderDcPolicy: required policy file not found: $p"
+            }
+        }
+
+        Write-Verbose "Groups: $GroupsXmlPath"
+        Write-Verbose "Rules:  $RulesXmlPath"
+
+        # Use the public Test-DefenderDcPolicyXml validator (which layers BOM /
+        # xml-declaration / PolicyRule.Name-as-child / Options-bitmask checks on
+        # top of Read-DcPolicyXml + MpCmdRun) so a caller-supplied XML faces the
+        # same contract whether they ran Test-DefenderDcPolicyXml first or not.
+        if (-not (Test-DefenderDcPolicyXml -Path $GroupsXmlPath -Kind Groups -SkipEngineValidation:$SkipMpCmdRunValidation)) {
+            throw "Set-DefenderDcPolicy: GroupsXmlPath failed validation: $GroupsXmlPath"
+        }
+        if (-not (Test-DefenderDcPolicyXml -Path $RulesXmlPath -Kind Rules -SkipEngineValidation:$SkipMpCmdRunValidation)) {
+            throw "Set-DefenderDcPolicy: RulesXmlPath failed validation: $RulesXmlPath"
+        }
+
+        $manifest = Get-DcRegistryManifest -GroupsXmlPath $GroupsXmlPath -RulesXmlPath $RulesXmlPath
+
+        if ($PSCmdlet.ShouldProcess('Device Control policy registry', "Apply $Mode policy state")) {
+            Write-Verbose "Removing any prior Device Control policy state before re-applying."
+            Remove-DcPolicy
+
+            Invoke-DcRegistryWrites -Manifest $manifest
+
+            if (-not $SkipGpUpdate -and $PSCmdlet.ShouldProcess('Group Policy', 'gpupdate /force')) {
+                & gpupdate.exe /force 2>&1 | ForEach-Object { Write-Verbose "  $_" }
+            }
+
+            if ($PSCmdlet.ShouldProcess('Defender engine', 'Update-MpSignature')) {
+                Update-MpSignature -UpdateSource MMPC -ErrorAction SilentlyContinue
+            }
         }
     }
-
-    Write-Verbose "Groups: $GroupsXmlPath"
-    Write-Verbose "Rules:  $RulesXmlPath"
-
-    Read-DcPolicyXml -Path $GroupsXmlPath | Out-Null
-    Read-DcPolicyXml -Path $RulesXmlPath  | Out-Null
-
-    if (-not $SkipMpCmdRunValidation) {
-        Test-DcXmlWithMpCmdRun -XmlPath $GroupsXmlPath -Kind Groups
-        Test-DcXmlWithMpCmdRun -XmlPath $RulesXmlPath  -Kind Rules
-    }
-
-    $manifest = Get-DcRegistryManifest -GroupsXmlPath $GroupsXmlPath -RulesXmlPath $RulesXmlPath
-
-    Write-Verbose "Removing any prior Device Control policy state before re-applying."
-    Remove-DcPolicy
-
-    Invoke-DcRegistryWrites -Manifest $manifest
-
-    if (-not $SkipGpUpdate -and $PSCmdlet.ShouldProcess('Group Policy', 'gpupdate /force')) {
-        & gpupdate.exe /force 2>&1 | ForEach-Object { Write-Verbose "  $_" }
-    }
-
-    if ($PSCmdlet.ShouldProcess('Defender engine', 'Update-MpSignature')) {
-        Update-MpSignature -UpdateSource MMPC -ErrorAction SilentlyContinue
+    finally {
+        # Stop-Transcript throws "host is not currently transcribing" under -WhatIf
+        # (Start-Transcript honors $WhatIfPreference and becomes a no-op). The
+        # finally block must clean up regardless; swallow the benign case.
+        try { Stop-Transcript | Out-Null } catch { }
+        Write-Verbose "Set-DefenderDcPolicy transcript: $transcript"
     }
 }

@@ -33,8 +33,8 @@ Describe 'Exported functions surface' {
         $cmds.Name | Should -Not -Contain 'Remove-DcPolicy'
         $cmds.Name | Should -Not -Contain 'Invoke-DcRegistryWrites'
         $cmds.Name | Should -Not -Contain 'Test-DcXmlWithMpCmdRun'
-        $cmds.Name | Should -Not -Contain 'Get-DefenderMpCmdRun'
-        $cmds.Name | Should -Not -Contain 'Test-IsElevated'
+        $cmds.Name | Should -Not -Contain 'Get-DcMpCmdRunPath'
+        $cmds.Name | Should -Not -Contain 'Test-DcIsElevated'
         $cmds.Name | Should -Not -Contain 'Get-DcComputerStatus'
     }
 

@@ -16,9 +16,9 @@ Describe 'Get-DefenderDcPolicy' {
         $mandatoryParams.Count | Should -Be 0
     }
 
-    It 'returns a [pscustomobject]' {
+    It 'declares OutputType DefenderDeviceControlUnmanaged.Policy' {
         $cmd = Get-Command Get-DefenderDcPolicy
-        $cmd.OutputType.Type | Should -Contain ([pscustomobject])
+        $cmd.OutputType.Name | Should -Contain 'DefenderDeviceControlUnmanaged.Policy'
     }
 
     It 'has populated comment-based help (SYNOPSIS, DESCRIPTION, >=1 EXAMPLE)' {
@@ -67,9 +67,10 @@ Describe 'Get-DefenderDcPolicy' {
                 Mock Test-Path { return $true } -ParameterFilter { $LiteralPath -like '*Rules.xml' }
                 Mock Test-Path { return $false }
                 Mock Read-DcPolicyXml {
-                    # Return a single Rule with an AuditAllowed entry
+                    # Return a single Rule with an AuditAllowed entry — <Type> is a child
+                    # element per WindowsDefender.admx, not an attribute.
                     $rawXml = '<PolicyRule Id="{x}"><Entry Id="{y}"><Type>AuditAllowed</Type></Entry></PolicyRule>'
-                    [pscustomobject]@{ Kind='Rule'; Guid='{x}'; RawXml = $rawXml }
+                    [pscustomobject]@{ Kind='Rule'; Id='{x}'; EntryTypes=@('AuditAllowed'); RawXml = $rawXml }
                 }
 
                 $result = Get-DefenderDcPolicy
@@ -98,7 +99,7 @@ Describe 'Get-DefenderDcPolicy' {
                 Mock Test-Path { return $false }
                 Mock Read-DcPolicyXml {
                     $rawXml = '<PolicyRule Id="{x}"><Entry Id="{y}"><Type>Deny</Type></Entry></PolicyRule>'
-                    [pscustomobject]@{ Kind='Rule'; Guid='{x}'; RawXml = $rawXml }
+                    [pscustomobject]@{ Kind='Rule'; Id='{x}'; EntryTypes=@('Deny'); RawXml = $rawXml }
                 }
 
                 $result = Get-DefenderDcPolicy

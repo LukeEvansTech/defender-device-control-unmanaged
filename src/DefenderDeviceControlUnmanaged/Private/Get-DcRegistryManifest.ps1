@@ -1,11 +1,18 @@
 function Get-DcRegistryManifest {
     [CmdletBinding()]
+    [OutputType([pscustomobject[]])]
     param(
-        [Parameter(Mandatory)][string] $GroupsXmlPath,
-        [Parameter(Mandatory)][string] $RulesXmlPath
+        [Parameter(Mandatory)]
+        [string] $GroupsXmlPath,
+
+        [Parameter(Mandatory)]
+        [string] $RulesXmlPath
     )
 
-    $absolutePattern = '^([A-Za-z]:\\|/)' # Windows drive-letter or Unix root
+    # IsPathRooted is platform-aware: on non-Windows it does not recognize Windows
+    # drive-letter paths like 'C:\foo'. The regex keeps validation correct when the
+    # Pester suite runs on macOS/Linux CI against Windows-style fixture paths.
+    $absolutePattern = '^([A-Za-z]:\\|/)'
     if (-not ([System.IO.Path]::IsPathRooted($GroupsXmlPath) -or $GroupsXmlPath -match $absolutePattern)) {
         throw "Get-DcRegistryManifest: GroupsXmlPath must be an absolute path; got '$GroupsXmlPath'."
     }

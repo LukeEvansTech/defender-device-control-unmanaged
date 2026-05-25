@@ -1,5 +1,6 @@
-function Test-IsElevated {
+function Test-DcIsElevated {
     [CmdletBinding()]
+    [OutputType([bool])]
     param()
     $id = [System.Security.Principal.WindowsIdentity]::GetCurrent()
     $p  = New-Object System.Security.Principal.WindowsPrincipal($id)

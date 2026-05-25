@@ -39,6 +39,14 @@ Describe 'Test-DefenderDcPolicyXml' {
         Test-DefenderDcPolicyXml -Path (Join-Path $Fixtures 'good-Rules.xml') -Kind Rules | Should -BeTrue
     }
 
+    It 'supports skipping the engine-side validation layer' {
+        $goodRulesPath = Join-Path $Fixtures 'good-Rules.xml'
+        Test-DefenderDcPolicyXml -Path $goodRulesPath -Kind Rules -SkipEngineValidation | Should -BeTrue
+        InModuleScope DefenderDeviceControlUnmanaged {
+            Should -Invoke Test-DcXmlWithMpCmdRun -Times 0 -Exactly
+        }
+    }
+
     It 'fails with a BOM-specific error on bad-bom-Groups.xml' {
         $result = Test-DefenderDcPolicyXml -Path (Join-Path $Fixtures 'bad-bom-Groups.xml') -Kind Groups -ErrorVariable err -ErrorAction SilentlyContinue
         $result | Should -BeFalse
@@ -67,6 +75,24 @@ Describe 'Test-DefenderDcPolicyXml' {
         $result = Test-DefenderDcPolicyXml -Path 'C:\does-not-exist.xml' -Kind Groups -ErrorVariable err -ErrorAction SilentlyContinue
         $result | Should -BeFalse
         ($err -join ' ') | Should -Match 'not found'
+    }
+
+    It 'still rejects an empty-Entry-list PolicyRule under -SkipEngineValidation' {
+        # Regression for the Codex P2: when MpCmdRun is skipped, the per-element
+        # structural checks (every PolicyRule has at least one <Entry>, Id present)
+        # must still run via Read-DcPolicyXml.
+        $tmp = New-TemporaryFile
+        $xml = '<PolicyRules><PolicyRule Id="{aaaaaaaa-aaaa-aaaa-aaaa-aaaaaaaaaaaa}"><Name>empty</Name><IncludedIdList><GroupId>{x}</GroupId></IncludedIdList><ExcludedIdList/></PolicyRule></PolicyRules>'
+        # Portable BOM-less UTF-8 write — Set-Content -Encoding utf8 emits a BOM
+        # on Windows PowerShell 5.1, which would trip the BOM check before the
+        # structural layer this test is targeting.
+        [System.IO.File]::WriteAllText($tmp.FullName, $xml, [System.Text.UTF8Encoding]::new($false))
+        try {
+            $result = Test-DefenderDcPolicyXml -Path $tmp.FullName -Kind Rules -SkipEngineValidation -ErrorVariable err -ErrorAction SilentlyContinue
+            $result | Should -BeFalse
+            ($err -join ' ') | Should -Match 'Entry|structural'
+        }
+        finally { Remove-Item $tmp.FullName -Force }
     }
 
     It 'has populated comment-based help (SYNOPSIS, DESCRIPTION, >=1 EXAMPLE)' {
