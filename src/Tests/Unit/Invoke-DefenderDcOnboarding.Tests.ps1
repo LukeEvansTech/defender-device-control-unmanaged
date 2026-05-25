@@ -103,4 +103,33 @@ Describe 'Invoke-DefenderDcOnboarding pre-flight' {
             }
         }
     }
+
+    Context 'Regression: -WhatIf with unmocked Start/Stop-Transcript (Windows-only)' {
+        # See Set-DefenderDcPolicy.Tests.ps1 for the full rationale. The
+        # Start-Transcript / Stop-Transcript pair under -WhatIf raised
+        # "host is not currently transcribing" from the finally block. This
+        # test exercises the path without mocking the transcript helpers so
+        # the guard is structurally required.
+        It '-WhatIf completes without throwing when transcript helpers are not mocked' -Skip:($env:OS -ne 'Windows_NT') {
+            InModuleScope DefenderDeviceControlUnmanaged {
+                Mock Test-DcIsElevated { $true }
+                Mock Get-DcComputerStatus {
+                    [pscustomobject]@{ AMServiceEnabled = $true; AMEngineVersion = '0.0'; AMProductVersion = '0.0'; IsTamperProtected = $false }
+                }
+                Mock Get-Service {
+                    [pscustomobject]@{ Name = 'Sense'; Status = 'Stopped' }
+                } -ParameterFilter { $Name -eq 'Sense' }
+                Mock Test-Path { $true }
+                Mock Get-ItemProperty {
+                    [pscustomobject]@{ OnboardingState = 0 }
+                } -ParameterFilter { $Name -eq 'OnboardingState' }
+                Mock Expand-Archive { }
+                Mock Start-Sleep { }
+                # Deliberately NOT mocking Start-DcTranscript / Stop-Transcript.
+
+                { Invoke-DefenderDcOnboarding -OnboardingScript 'C:\nope\onboarding.zip' -WhatIf } |
+                    Should -Not -Throw
+            }
+        }
+    }
 }
