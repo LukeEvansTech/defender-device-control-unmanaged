@@ -36,38 +36,22 @@ function Get-DefenderDcPolicy {
     https://lukeevanstech.github.io/defender-device-control-unmanaged/
 #>
     [CmdletBinding()]
-    [OutputType([pscustomobject])]
+    [OutputType('DefenderDeviceControlUnmanaged.Policy')]
     param()
 
     Set-StrictMode -Version Latest
     $ErrorActionPreference = 'Stop'
 
-    $feat = $null
-    $defaultEnforcement = $null
-    $securedClasses = $null
-    $groupsXml = $null
-    $rulesXml = $null
-
-    $p = Get-ItemProperty -LiteralPath $script:DcFeatures -Name DeviceControlEnabled -ErrorAction SilentlyContinue
-    if ($null -ne $p) { $feat = $p.DeviceControlEnabled }
-
-    $p = Get-ItemProperty -LiteralPath $script:DcRoot -Name DefaultEnforcement -ErrorAction SilentlyContinue
-    if ($null -ne $p) { $defaultEnforcement = $p.DefaultEnforcement }
-
-    $p = Get-ItemProperty -LiteralPath $script:DcRoot -Name SecuredDevicesConfiguration -ErrorAction SilentlyContinue
-    if ($null -ne $p) { $securedClasses = $p.SecuredDevicesConfiguration }
-
-    $p = Get-ItemProperty -LiteralPath $script:DcGroupsKey -Name PolicyGroups -ErrorAction SilentlyContinue
-    if ($null -ne $p) { $groupsXml = $p.PolicyGroups }
-
-    $p = Get-ItemProperty -LiteralPath $script:DcRulesKey -Name PolicyRules -ErrorAction SilentlyContinue
-    if ($null -ne $p) { $rulesXml = $p.PolicyRules }
+    $feat               = Get-DcRegistryValue -Path $script:DcFeatures  -Name DeviceControlEnabled
+    $defaultEnforcement = Get-DcRegistryValue -Path $script:DcRoot      -Name DefaultEnforcement
+    $securedClasses     = Get-DcRegistryValue -Path $script:DcRoot      -Name SecuredDevicesConfiguration
+    $groupsXml          = Get-DcRegistryValue -Path $script:DcGroupsKey -Name PolicyGroups
+    $rulesXml           = Get-DcRegistryValue -Path $script:DcRulesKey  -Name PolicyRules
 
     $mode = 'Off'
     if ($rulesXml -and (Test-Path -LiteralPath $rulesXml)) {
         try {
-            $items = Read-DcPolicyXml -Path $rulesXml
-            $allTypes = $items | ForEach-Object { ([xml]$_.RawXml).PolicyRule.Entry.Type }
+            $allTypes = (Read-DcPolicyXml -Path $rulesXml).EntryTypes
             if ($allTypes -contains 'Deny') { $mode = 'Enforce' }
             elseif ($allTypes -contains 'AuditAllowed') { $mode = 'Audit' }
         } catch {
@@ -91,6 +75,7 @@ function Get-DefenderDcPolicy {
     }
 
     [pscustomobject]@{
+        PSTypeName                       = 'DefenderDeviceControlUnmanaged.Policy'
         Mode                             = $mode
         FeaturesDeviceControlEnabled     = $feat
         DefaultEnforcement               = $defaultEnforcement

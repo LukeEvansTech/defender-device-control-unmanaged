@@ -27,6 +27,7 @@ function Test-DefenderDcPolicy {
     [CmdletBinding()]
     [OutputType([bool])]
     param(
+        [Alias('Mode')]
         [ValidateSet('Audit','Enforce','Off')]
         [string] $ExpectMode = 'Audit'
     )
@@ -34,120 +35,105 @@ function Test-DefenderDcPolicy {
     Set-StrictMode -Version Latest
     $ErrorActionPreference = 'Stop'
 
-    $script:dcFailures = 0
-
-    function Assert-DcCondition {
-        param([string]$Name, [scriptblock]$Test, [string]$ExpectedMsg)
-        try {
-            if (& $Test) { Write-Host "  PASS  $Name" -ForegroundColor Green }
-            else { Write-Host "  FAIL  $Name  ($ExpectedMsg)" -ForegroundColor Red; $script:dcFailures++ }
-        } catch {
-            Write-Host "  FAIL  $Name  (threw: $($_.Exception.Message))" -ForegroundColor Red
-            $script:dcFailures++
-        }
-    }
+    $failures = 0
+    $failureRef = [ref]$failures
 
     Write-Host "Defender Device Control verification (ExpectMode=$ExpectMode)" -ForegroundColor Yellow
 
     $status = Get-DcComputerStatus
-    Assert-DcCondition 'Defender AM service enabled' { $status.AMServiceEnabled } 'AMServiceEnabled must be True'
-    Assert-DcCondition 'Defender antivirus enabled'  { $status.AntivirusEnabled } 'AntivirusEnabled must be True'
+    Write-DcCheckResult 'Defender AM service enabled' { $status.AMServiceEnabled } 'AMServiceEnabled must be True' $failureRef
+    Write-DcCheckResult 'Defender antivirus enabled'  { $status.AntivirusEnabled } 'AntivirusEnabled must be True' $failureRef
 
     if ($ExpectMode -eq 'Off') {
-        Assert-DcCondition 'Device Control root key absent' {
+        Write-DcCheckResult 'Device Control root key absent' {
             -not (Test-Path -LiteralPath $script:DcRoot)
-        } "$script:DcRoot should not exist"
+        } "$script:DcRoot should not exist" $failureRef
 
-        $featProp = Get-ItemProperty -LiteralPath $script:DcFeatures -Name DeviceControlEnabled -ErrorAction SilentlyContinue
-        Assert-DcCondition 'Features\DeviceControlEnabled absent or 0' {
-            $null -eq $featProp -or $featProp.DeviceControlEnabled -eq 0
-        } 'Features\DeviceControlEnabled must be 0 or absent'
+        $featVal = Get-DcRegistryValue -Path $script:DcFeatures -Name DeviceControlEnabled
+        Write-DcCheckResult 'Features\DeviceControlEnabled absent or 0' {
+            $null -eq $featVal -or $featVal -eq 0
+        } 'Features\DeviceControlEnabled must be 0 or absent' $failureRef
 
-        Assert-DcCondition 'Engine reports DeviceControlState=Disabled' {
+        Write-DcCheckResult 'Engine reports DeviceControlState=Disabled' {
             $prop = $status.PSObject.Properties['DeviceControlState']
             $null -eq $prop -or $prop.Value -eq 'Disabled' -or $prop.Value -eq 0
-        } 'engine view should reflect that DC is disabled'
+        } 'engine view should reflect that DC is disabled' $failureRef
 
     } else {
 
-        Assert-DcCondition 'Features\DeviceControlEnabled = 1' {
-            $p = Get-ItemProperty -LiteralPath $script:DcFeatures -Name DeviceControlEnabled -ErrorAction SilentlyContinue
-            $null -ne $p -and $p.DeviceControlEnabled -eq 1
-        } 'must be 1'
+        $featVal     = Get-DcRegistryValue -Path $script:DcFeatures -Name DeviceControlEnabled
+        $defEnf      = Get-DcRegistryValue -Path $script:DcRoot     -Name DefaultEnforcement
+        $secured     = Get-DcRegistryValue -Path $script:DcRoot     -Name SecuredDevicesConfiguration
+        $groupsXml   = Get-DcRegistryValue -Path $script:DcGroupsKey -Name PolicyGroups
+        $rulesXml    = Get-DcRegistryValue -Path $script:DcRulesKey  -Name PolicyRules
 
-        Assert-DcCondition 'Device Control\DefaultEnforcement = 1 (Allow)' {
-            $p = Get-ItemProperty -LiteralPath $script:DcRoot -Name DefaultEnforcement -ErrorAction SilentlyContinue
-            $null -ne $p -and $p.DefaultEnforcement -eq 1
-        } 'must be 1'
+        Write-DcCheckResult 'Features\DeviceControlEnabled = 1' {
+            $featVal -eq 1
+        } 'must be 1' $failureRef
 
-        Assert-DcCondition 'SecuredDevicesConfiguration scopes Removable + CdRom + Wpd' {
-            $p = Get-ItemProperty -LiteralPath $script:DcRoot -Name SecuredDevicesConfiguration -ErrorAction SilentlyContinue
-            $null -ne $p -and $p.SecuredDevicesConfiguration -eq 'RemovableMediaDevices|CdRomDevices|WpdDevices'
-        } 'must be exactly "RemovableMediaDevices|CdRomDevices|WpdDevices"'
+        Write-DcCheckResult 'Device Control\DefaultEnforcement = 1 (Allow)' {
+            $defEnf -eq 1
+        } 'must be 1' $failureRef
 
-        $script:groupsRegVal = $null
-        Assert-DcCondition 'Policy Groups\PolicyGroups REG_SZ exists' {
-            $p = Get-ItemProperty -LiteralPath $script:DcGroupsKey -Name PolicyGroups -ErrorAction SilentlyContinue
-            $script:groupsRegVal = if ($null -ne $p) { $p.PolicyGroups } else { $null }
-            $null -ne $script:groupsRegVal -and $script:groupsRegVal -ne ''
-        } 'must be a non-empty string'
+        Write-DcCheckResult 'SecuredDevicesConfiguration scopes Removable + CdRom + Wpd' {
+            $secured -eq 'RemovableMediaDevices|CdRomDevices|WpdDevices'
+        } 'must be exactly "RemovableMediaDevices|CdRomDevices|WpdDevices"' $failureRef
 
-        Assert-DcCondition 'Policy Groups XML file exists at registered path' {
-            $null -ne $script:groupsRegVal -and (Test-Path -LiteralPath $script:groupsRegVal -PathType Leaf)
-        } 'file at the registered path must exist'
+        Write-DcCheckResult 'Policy Groups\PolicyGroups REG_SZ exists' {
+            -not [string]::IsNullOrEmpty($groupsXml)
+        } 'must be a non-empty string' $failureRef
 
-        Assert-DcCondition 'Policy Groups XML parses as 3 Group records' {
-            if ($null -eq $script:groupsRegVal -or -not (Test-Path -LiteralPath $script:groupsRegVal -PathType Leaf)) { return $false }
-            @(Read-DcPolicyXml -Path $script:groupsRegVal).Count -eq 3
-        } 'must contain exactly 3 <Group> elements'
+        Write-DcCheckResult 'Policy Groups XML file exists at registered path' {
+            -not [string]::IsNullOrEmpty($groupsXml) -and (Test-Path -LiteralPath $groupsXml -PathType Leaf)
+        } 'file at the registered path must exist' $failureRef
 
-        $script:rulesRegVal = $null
-        Assert-DcCondition 'Policy Rules\PolicyRules REG_SZ exists' {
-            $p = Get-ItemProperty -LiteralPath $script:DcRulesKey -Name PolicyRules -ErrorAction SilentlyContinue
-            $script:rulesRegVal = if ($null -ne $p) { $p.PolicyRules } else { $null }
-            $null -ne $script:rulesRegVal -and $script:rulesRegVal -ne ''
-        } 'must be a non-empty string'
+        Write-DcCheckResult 'Policy Groups XML parses as 3 Group records' {
+            if ([string]::IsNullOrEmpty($groupsXml) -or -not (Test-Path -LiteralPath $groupsXml -PathType Leaf)) { return $false }
+            @(Read-DcPolicyXml -Path $groupsXml).Count -eq 3
+        } 'must contain exactly 3 <Group> elements' $failureRef
 
-        Assert-DcCondition 'Policy Rules XML file exists at registered path' {
-            $null -ne $script:rulesRegVal -and (Test-Path -LiteralPath $script:rulesRegVal -PathType Leaf)
-        } 'file at the registered path must exist'
+        Write-DcCheckResult 'Policy Rules\PolicyRules REG_SZ exists' {
+            -not [string]::IsNullOrEmpty($rulesXml)
+        } 'must be a non-empty string' $failureRef
 
-        Assert-DcCondition 'Policy Rules XML parses as 3 PolicyRule records' {
-            if ($null -eq $script:rulesRegVal -or -not (Test-Path -LiteralPath $script:rulesRegVal -PathType Leaf)) { return $false }
-            @(Read-DcPolicyXml -Path $script:rulesRegVal).Count -eq 3
-        } 'must contain exactly 3 <PolicyRule> elements'
+        Write-DcCheckResult 'Policy Rules XML file exists at registered path' {
+            -not [string]::IsNullOrEmpty($rulesXml) -and (Test-Path -LiteralPath $rulesXml -PathType Leaf)
+        } 'file at the registered path must exist' $failureRef
+
+        Write-DcCheckResult 'Policy Rules XML parses as 3 PolicyRule records' {
+            if ([string]::IsNullOrEmpty($rulesXml) -or -not (Test-Path -LiteralPath $rulesXml -PathType Leaf)) { return $false }
+            @(Read-DcPolicyXml -Path $rulesXml).Count -eq 3
+        } 'must contain exactly 3 <PolicyRule> elements' $failureRef
 
         $expectedType = if ($ExpectMode -eq 'Audit') { 'AuditAllowed' } else { 'Deny' }
-        Assert-DcCondition "Rules XML uses Entry Type=$expectedType (matches ExpectMode)" {
-            if ($null -eq $script:rulesRegVal -or -not (Test-Path -LiteralPath $script:rulesRegVal -PathType Leaf)) { return $false }
-            $items = Read-DcPolicyXml -Path $script:rulesRegVal
-            foreach ($r in $items) {
-                $types = @(([xml]$r.RawXml).PolicyRule.Entry.Type)
-                if ($types -notcontains $expectedType) { return $false }
+        Write-DcCheckResult "Rules XML uses Entry Type=$expectedType (matches ExpectMode)" {
+            if ([string]::IsNullOrEmpty($rulesXml) -or -not (Test-Path -LiteralPath $rulesXml -PathType Leaf)) { return $false }
+            foreach ($r in (Read-DcPolicyXml -Path $rulesXml)) {
+                if ($r.EntryTypes -notcontains $expectedType) { return $false }
             }
             $true
-        } "Mode $ExpectMode requires at least one $expectedType entry per rule"
+        } "Mode $ExpectMode requires at least one $expectedType entry per rule" $failureRef
 
-        Assert-DcCondition 'Engine reports DeviceControlState != Disabled' {
+        Write-DcCheckResult 'Engine reports DeviceControlState != Disabled' {
             $prop = $status.PSObject.Properties['DeviceControlState']
             $null -ne $prop -and $prop.Value -ne 'Disabled' -and $prop.Value -ne 0
-        } 'Get-MpComputerStatus.DeviceControlState must reflect engine consumed policy'
+        } 'Get-MpComputerStatus.DeviceControlState must reflect engine consumed policy' $failureRef
 
-        Assert-DcCondition 'Engine reports DeviceControlPoliciesLastUpdated is recent (not 1601 sentinel)' {
+        Write-DcCheckResult 'Engine reports DeviceControlPoliciesLastUpdated is recent (not 1601 sentinel)' {
             $prop = $status.PSObject.Properties['DeviceControlPoliciesLastUpdated']
             if ($null -eq $prop) { return $false }
             $v = $prop.Value
             if ($null -eq $v) { return $false }
             try { $dt = [datetime]$v } catch { return $false }
             $dt.Year -ge 2000
-        } '1601-01-01 sentinel means engine never read the policy'
+        } '1601-01-01 sentinel means engine never read the policy' $failureRef
     }
 
     Write-Host ""
-    if ($script:dcFailures -eq 0) {
+    if ($failureRef.Value -eq 0) {
         Write-Host "Static checks: ALL PASSED" -ForegroundColor Green
     } else {
-        Write-Host "Static checks: $($script:dcFailures) FAILED" -ForegroundColor Red
+        Write-Host "Static checks: $($failureRef.Value) FAILED" -ForegroundColor Red
     }
 
     Write-Host ""
@@ -158,5 +144,5 @@ function Test-DefenderDcPolicy {
     Write-Host "       Audit mode:   succeeds, Defender XDR Advanced Hunting records the event."
     Write-Host "       Enforce mode: fails with 'The media is write protected', toast shows."
 
-    return ($script:dcFailures -eq 0)
+    return ($failureRef.Value -eq 0)
 }
