@@ -153,7 +153,10 @@ function Set-DefenderDcPolicy {
         }
     }
     finally {
-        Stop-Transcript | Out-Null
+        # Stop-Transcript throws "host is not currently transcribing" under -WhatIf
+        # (Start-Transcript honors $WhatIfPreference and becomes a no-op). The
+        # finally block must clean up regardless; swallow the benign case.
+        try { Stop-Transcript | Out-Null } catch { }
         Write-Verbose "Set-DefenderDcPolicy transcript: $transcript"
     }
 }
