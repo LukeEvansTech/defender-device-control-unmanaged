@@ -8,9 +8,15 @@ Describe 'Module manifest' {
         $m | Should -Not -BeNullOrEmpty
     }
 
-    It 'has ModuleVersion 1.0.0' {
+    It 'declares a parseable ModuleVersion at or above 1.0.0' {
+        # Version-agnostic on purpose - the publish workflow asserts the tag
+        # matches the manifest version, so we only need to know that the field
+        # is set and parses as a real [version], not what the literal value is.
+        # Pinning a literal here meant every release commit shipped with a
+        # red test for the unrelated assertion (see v1.0.1).
         $m = Test-ModuleManifest -Path $script:ModuleManifest
-        $m.Version.ToString() | Should -Be '1.0.0'
+        $m.Version | Should -BeOfType ([version])
+        $m.Version -ge [version]'1.0.0' | Should -BeTrue
     }
 
     It 'declares CompatiblePSEditions Core and Desktop' {
