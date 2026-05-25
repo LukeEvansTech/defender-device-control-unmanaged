@@ -186,4 +186,30 @@ Describe 'Set-DefenderDcPolicy' {
             }
         }
     }
+
+    Context 'Regression: -WhatIf with unmocked Start/Stop-Transcript (Windows-only)' {
+        # Every existing -WhatIf test mocks Start-DcTranscript AND Stop-Transcript,
+        # which hides the real bug: Start-Transcript honors $WhatIfPreference and
+        # becomes a no-op, but the finally block unconditionally calls
+        # Stop-Transcript - which then throws "host is not currently transcribing"
+        # and surfaces as exit code 1. This test exercises that path without
+        # mocking the transcript helpers, so the finally-block guard is required
+        # for the cmdlet to return cleanly.
+        It '-WhatIf completes without throwing when transcript helpers are not mocked' -Skip:($env:OS -ne 'Windows_NT') {
+            InModuleScope DefenderDeviceControlUnmanaged {
+                Mock Test-DcIsElevated { $true }
+                Mock Get-DcComputerStatus { [pscustomobject]@{ AMServiceEnabled = $true; AMEngineVersion = '0.0'; IsTamperProtected = $false } }
+                Mock Test-Path { $true } -ParameterFilter { $LiteralPath -like '*.xml' }
+                Mock Test-DefenderDcPolicyXml { $true }
+                Mock Get-DcRegistryManifest { @([pscustomobject]@{ Path='x'; Name='n'; Type='DWord'; Value=1 }) }
+                Mock Remove-DcPolicy { }
+                Mock Invoke-DcRegistryWrites { }
+                Mock Update-MpSignature { }
+                # Deliberately NOT mocking Start-DcTranscript / Stop-Transcript.
+
+                { Set-DefenderDcPolicy -Mode Audit -GroupsXmlPath 'C:\nope\g.xml' -RulesXmlPath 'C:\nope\r.xml' -SkipGpUpdate -WhatIf } |
+                    Should -Not -Throw
+            }
+        }
+    }
 }
