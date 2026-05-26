@@ -28,26 +28,26 @@ automatically.
 
 ## What the cmdlet does (seven phases)
 
-**[1/7] Pre-flight**
+**\[1/7\] Pre-flight**
 Checks that the Defender AM service is enabled and the Sense service is Running. A
 non-running Sense service means MDE is not attached and the engine will not act on the
 policy.
 
-**[2/7] Capture pre-state**
+**\[2/7\] Capture pre-state**
 Reads the current Device Control mode with `Get-DefenderDcPolicy` and records it.
 This is the mode the cmdlet will restore at the end (unless `-KeepDcApplied` is set).
 
-**[3/7] Apply DC at StartMode**
+**\[3/7\] Apply DC at StartMode**
 Calls `Set-DefenderDcPolicy -Mode <StartMode>` with the shipped starter XMLs. If you
 want to test custom XML, apply it yourself before calling this cmdlet and use
 `-KeepDcApplied` to prevent rollback.
 
-**[4/7] Verify static state**
+**\[4/7\] Verify static state**
 Calls `Test-DefenderDcPolicy -ExpectMode <StartMode>` and records the result. A FAIL
 here means the registry is not in the expected state and the manual test result would
 be unreliable.
 
-**[5/7] Operator interactive test**
+**\[5/7\] Operator interactive test**
 The script pauses and prints instructions:
 
 ```
@@ -62,13 +62,13 @@ The script pauses and prints instructions:
 
 Press **Enter** when you are done with the manual test.
 
-**[6/7] Event-log lookup**
+**\[6/7\] Event-log lookup**
 After you press Enter, the cmdlet reads the last 100 events from the
 `Microsoft-Windows-Windows Defender/Operational` log and filters for IDs
 1109, 1110, and 1111 created in the two minutes before you pressed Enter. It prints the
 count and timestamps. A count of zero is informational, not a failure.
 
-**[7/7] Restore**
+**\[7/7\] Restore**
 Restores the pre-test DC mode unless `-KeepDcApplied` is set or the pre-test mode
 already matches the StartMode. Restoration calls `Set-DefenderDcPolicy -Mode <preMode>`.
 
