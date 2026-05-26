@@ -66,7 +66,7 @@ This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable
 ###   PolicyGroupsXmlPath               - string or $null
 ###   PolicyRulesXmlPath                - string or $null
 ###   DeviceControlState                - 'Enabled' / 'Disabled' / etc. from engine
-###   DeviceControlPoliciesLastUpdated  - [datetime] or $null
+###   DeviceControlPoliciesLastUpdated  - `[datetime]` or $null
 ## NOTES
 
 ## RELATED LINKS
