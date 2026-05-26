@@ -78,19 +78,19 @@ Invoke-DefenderDcOnboarding -OnboardingScript 'C:\Extracted\WindowsDefenderATPOn
 
 The cmdlet runs four numbered phases and prints a real-time status banner.
 
-**[1/4] Pre-flight**
+**\[1/4\] Pre-flight**
 Verifies that the Defender AM service is enabled, the Sense service is installed on the
 box, and the device is not already onboarded. If the box is already onboarded
 (Sense=Running and OnboardingState=1), the cmdlet throws and exits -- do not re-onboard
 without offboarding first.
 
-**[2/4] Locate onboarding script**
+**\[2/4\] Locate onboarding script**
 If `-OnboardingScript` is not supplied, the cmdlet scans `Downloads` for ZIPs matching
 `*WindowsDefenderATPOnboarding*.zip`, selects the newest, extracts it to a temp
 directory, and locates `WindowsDefenderATP*OnboardingScript.cmd` inside. The temp
 directory is cleaned up in the `finally` block regardless of outcome.
 
-**[3/4] Run onboarding script**
+**\[3/4\] Run onboarding script**
 Calls `cmd.exe /c "<path-to-.cmd>"` under the current elevated session. Waits for exit.
 A non-zero exit code is logged as a warning rather than a hard stop; post-flight checks
 capture the actual resulting state.
@@ -99,7 +99,7 @@ After the script exits, the cmdlet waits `SkipPostFlightWait` seconds (default 3
 before reading service and registry state. The Sense service start and the OnboardingState
 registry marker are asynchronous -- the default wait is intentionally conservative.
 
-**[4/4] Post-flight verification**
+**\[4/4\] Post-flight verification**
 Checks and reports:
 - `Sense.Status = Running`
 - `Sense.StartType = Automatic`
