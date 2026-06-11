@@ -37,4 +37,14 @@ Describe 'New-DcDeterministicGuid' {
     It 'throws on an empty seed' {
         { New-DcDeterministicGuid -Seed '' } | Should -Throw
     }
+
+    It 'displays the version-5 nibble in the third group' {
+        New-DcDeterministicGuid -Seed 'ddcu:rule:usb' |
+            Should -Match '^\{[0-9a-f]{8}-[0-9a-f]{4}-5[0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}\}$'
+    }
+
+    It 'known seed produces stable known GUID (absolute value pin)' {
+        # Pinned vector: if the hashing scheme ever changes, this must fail.
+        New-DcDeterministicGuid -Seed 'ddcu:group:usb' | Should -Be '{388e01f5-6e1f-5afc-8554-dbf06ee14024}'
+    }
 }

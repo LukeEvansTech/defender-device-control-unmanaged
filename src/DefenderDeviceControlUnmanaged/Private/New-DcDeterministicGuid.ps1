@@ -31,7 +31,9 @@ function New-DcDeterministicGuid {
     }
 
     $bytes = $hash[0..15]
-    $bytes[6] = [byte](($bytes[6] -band 0x0F) -bor 0x50)   # version 5
+    # Data3 (bytes 6-7) is a little-endian short in Guid(byte[]); bytes[7] is
+    # the high byte and therefore the first hex digit of the third group.
+    $bytes[7] = [byte](($bytes[7] -band 0x0F) -bor 0x50)   # version 5
     $bytes[8] = [byte](($bytes[8] -band 0x3F) -bor 0x80)   # RFC 4122 variant
 
     '{' + ([guid]::new([byte[]]$bytes)).ToString() + '}'
