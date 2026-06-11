@@ -110,4 +110,28 @@ Describe 'ConvertTo-DcPolicyXml' {
     It 'throws on an unknown class key' {
         { ConvertTo-DcPolicyXml -Restrictions @{ Floppy = @('Block') } } | Should -Throw -ExpectedMessage '*unknown device class*'
     }
+
+    It 'uses LF newlines regardless of platform (byte-identical contract)' {
+        $r = ConvertTo-DcPolicyXml -Restrictions @{ Usb = @('ReadOnly'); Wpd = @('Allow'); Optical = @('Block') }
+        $r.GroupsXml       | Should -Not -Match "`r"
+        $r.AuditRulesXml   | Should -Not -Match "`r"
+        $r.EnforceRulesXml | Should -Not -Match "`r"
+    }
+
+    It 'emits classes in fixed Usb, Wpd, Optical order for deterministic output' {
+        $r = ConvertTo-DcPolicyXml -Restrictions @{ Optical = @('Block'); Usb = @('ReadOnly'); Wpd = @('ReadOnly') }
+        $usb     = $r.GroupsXml.IndexOf('RemovableMediaDevices')
+        $wpd     = $r.GroupsXml.IndexOf('WpdDevices')
+        $optical = $r.GroupsXml.IndexOf('CdRomDevices')
+        $usb | Should -BeLessThan $wpd
+        $wpd | Should -BeLessThan $optical
+    }
+
+    It 'XML-escapes PolicyName in group and rule names' {
+        $r = ConvertTo-DcPolicyXml -Restrictions @{ Usb = @('ReadOnly') } -PolicyName 'R&D <policy>'
+        { [xml]$r.GroupsXml } | Should -Not -Throw
+        { [xml]$r.EnforceRulesXml } | Should -Not -Throw
+        $r.GroupsXml | Should -Match 'R&amp;D &lt;policy&gt;'
+        $r.EnforceRulesXml | Should -Match 'R&amp;D &lt;policy&gt;'
+    }
 }

@@ -173,6 +173,12 @@ function ConvertTo-DcPolicyXml {
     [void]$sb.AppendLine('</PolicyRules>')
     $enforceXml = $sb.ToString()
 
+    # AppendLine emits Environment.NewLine (CRLF on Windows); the byte-identical
+    # contract requires one canonical form on every OS. Starters use LF.
+    $groupsXml  = $groupsXml  -replace "`r`n", "`n"
+    $auditXml   = $auditXml   -replace "`r`n", "`n"
+    $enforceXml = $enforceXml -replace "`r`n", "`n"
+
     [pscustomobject]@{
         GroupsXml       = $groupsXml
         AuditRulesXml   = $auditXml
