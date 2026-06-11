@@ -29,7 +29,10 @@ function Add-DcDeviceRecord {
     if (Test-Path -LiteralPath $Path -PathType Leaf) {
         $raw = Get-Content -LiteralPath $Path -Raw
         if (-not [string]::IsNullOrWhiteSpace($raw)) {
-            try { $existing = @($raw | ConvertFrom-Json) } catch {
+            # PS 5.1 ConvertFrom-Json emits a JSON array as ONE object (no
+            # enumeration); ForEach-Object flattens a level so records
+            # enumerate identically on 5.1 and 7+.
+            try { $existing = @($raw | ConvertFrom-Json | ForEach-Object { $_ }) } catch {
                 throw "Add-DcDeviceRecord: existing file is not valid JSON: $Path ($($_.Exception.Message))"
             }
         }

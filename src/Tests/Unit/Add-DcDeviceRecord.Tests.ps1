@@ -42,4 +42,15 @@ Describe 'Add-DcDeviceRecord' {
         { Add-DcDeviceRecord -Path $path -Device (New-Record 'USBSTOR\1') } |
             Should -Throw -ExpectedMessage '*not valid JSON*'
     }
+
+    It 'file written after two appends contains two flat records (no nested arrays)' {
+        $path = Join-Path $TestDrive 'flat.json'
+        Add-DcDeviceRecord -Path $path -Device (New-Record 'USBSTOR\1')
+        Add-DcDeviceRecord -Path $path -Device (New-Record 'USBSTOR\2')
+        $parsed = @(Get-Content -LiteralPath $path -Raw | ConvertFrom-Json | ForEach-Object { $_ })
+        $parsed.Count | Should -Be 2
+        foreach ($r in $parsed) {
+            $r.PSObject.Properties['InstancePathId'] | Should -Not -BeNullOrEmpty
+        }
+    }
 }

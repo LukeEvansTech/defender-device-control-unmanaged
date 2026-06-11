@@ -129,7 +129,9 @@ function New-DefenderDcPolicy {
                 throw "New-DefenderDcPolicy: -AllowDeviceFile not found: $AllowDeviceFile"
             }
             $raw = Get-Content -LiteralPath $AllowDeviceFile -Raw
-            try { $fileDevices = @($raw | ConvertFrom-Json) } catch {
+            # PS 5.1 ConvertFrom-Json emits a JSON array as ONE object; see
+            # Add-DcDeviceRecord for the same flatten-one-level idiom.
+            try { $fileDevices = @($raw | ConvertFrom-Json | ForEach-Object { $_ }) } catch {
                 throw "New-DefenderDcPolicy: -AllowDeviceFile is not valid JSON: $AllowDeviceFile ($($_.Exception.Message))"
             }
         }
