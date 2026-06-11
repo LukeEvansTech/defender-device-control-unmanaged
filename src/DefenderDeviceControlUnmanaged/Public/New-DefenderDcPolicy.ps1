@@ -171,6 +171,11 @@ function New-DefenderDcPolicy {
         Write-Verbose "Wrote $auditPath"
         Write-Verbose "Wrote $enforcePath"
 
+        $allAllow = ($restrictions.Values | ForEach-Object { $_ -contains 'Allow' }) -notcontains $false
+        if ($allAllow) {
+            Write-Warning 'New-DefenderDcPolicy: all classes are Allow - the Enforce rules file contains no rules and cannot be applied with -Mode Enforce. Use -Mode Audit.'
+        }
+
         [pscustomobject]@{
             PSTypeName          = 'DefenderDeviceControlUnmanaged.PolicyFiles'
             GroupsXmlPath       = $groupsPath

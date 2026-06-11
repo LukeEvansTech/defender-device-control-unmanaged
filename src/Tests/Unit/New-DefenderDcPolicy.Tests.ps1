@@ -104,5 +104,20 @@ Describe 'New-DefenderDcPolicy' {
             (Get-Content -LiteralPath $result.GroupsXmlPath -Raw) | Should -Match 'Kiosk lockdown'
             (Get-Content -LiteralPath $result.EnforceRulesXmlPath -Raw) | Should -Match 'Kiosk lockdown'
         }
+
+        It 'emits a warning and still writes three files when all supplied classes are Allow' {
+            $out = Join-Path $TestDrive 'all-allow'
+            $result = New-DefenderDcPolicy -Usb Allow -OutputPath $out -WarningVariable warn -WarningAction SilentlyContinue
+            # Warning must mention the all-Allow / Enforce / Audit situation
+            ($warn -join ' ') | Should -Match 'Allow|Enforce|Audit'
+            # All three files must still be written
+            Test-Path -LiteralPath $result.GroupsXmlPath       | Should -BeTrue
+            Test-Path -LiteralPath $result.AuditRulesXmlPath   | Should -BeTrue
+            Test-Path -LiteralPath $result.EnforceRulesXmlPath | Should -BeTrue
+            # Enforce file must be valid XML with an empty <PolicyRules> root
+            $doc = [xml](Get-Content -LiteralPath $result.EnforceRulesXmlPath -Raw)
+            $doc.DocumentElement.LocalName | Should -Be 'PolicyRules'
+            @($doc.DocumentElement.SelectNodes('PolicyRule')).Count | Should -Be 0
+        }
     }
 }

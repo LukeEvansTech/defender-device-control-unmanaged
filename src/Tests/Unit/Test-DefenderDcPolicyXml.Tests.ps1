@@ -101,4 +101,15 @@ Describe 'Test-DefenderDcPolicyXml' {
         $help.Description | Should -Not -BeNullOrEmpty
         $help.examples.example.Count | Should -BeGreaterThan 0
     }
+
+    It 'returns false with a clear zero-rule message for an empty PolicyRules file (all-Allow case)' {
+        $tmp = New-TemporaryFile
+        [System.IO.File]::WriteAllText($tmp.FullName, '<PolicyRules></PolicyRules>', [System.Text.UTF8Encoding]::new($false))
+        try {
+            $result = Test-DefenderDcPolicyXml -Path $tmp.FullName -Kind Rules -SkipEngineValidation -ErrorVariable err -ErrorAction SilentlyContinue
+            $result | Should -BeFalse
+            ($err -join ' ') | Should -Match 'zero.*PolicyRule|PolicyRule.*zero|all-Allow|Audit'
+        }
+        finally { Remove-Item $tmp.FullName -Force }
+    }
 }

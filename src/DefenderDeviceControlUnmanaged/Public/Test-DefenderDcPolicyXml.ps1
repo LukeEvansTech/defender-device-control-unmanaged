@@ -91,7 +91,11 @@ function Test-DefenderDcPolicyXml {
 
     # Layer 2c: Rules-specific format constraints
     if ($Kind -eq 'Rules') {
-        $rules = @($doc.PolicyRules.PolicyRule)
+        $rules = @($doc.DocumentElement.SelectNodes('PolicyRule'))
+        if ($rules.Count -eq 0) {
+            Write-Error "Test-DefenderDcPolicyXml: $Path contains zero <PolicyRule> elements. An all-Allow policy has nothing to enforce; apply it with -Mode Audit instead."
+            return $false
+        }
         foreach ($r in $rules) {
             $nameAttr = $r.Attributes['Name']
             if ($null -ne $nameAttr) {
