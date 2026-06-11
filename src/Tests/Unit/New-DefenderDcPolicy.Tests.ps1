@@ -85,5 +85,24 @@ Describe 'New-DefenderDcPolicy' {
             $result = New-DefenderDcPolicy -Usb Allow -OutputPath (Join-Path $TestDrive 'tn')
             $result.PSObject.TypeNames | Should -Contain 'DefenderDeviceControlUnmanaged.PolicyFiles'
         }
+
+        It 'accumulates multiple piped devices into the approved group' {
+            $out = Join-Path $TestDrive 'multi'
+            $devices = @(
+                [pscustomobject]@{ InstancePathId = 'USBSTOR\DISK\SERA&0' },
+                [pscustomobject]@{ InstancePathId = 'USBSTOR\DISK\SERB&0' }
+            )
+            $result = $devices | New-DefenderDcPolicy -Usb ReadOnly -OutputPath $out
+            $groups = [xml](Get-Content -LiteralPath $result.GroupsXmlPath -Raw)
+            $approved = @($groups.Groups.Group) | Where-Object { $_.Name -eq 'Approved devices' }
+            @($approved.DescriptorIdList.InstancePathId).Count | Should -Be 2
+        }
+
+        It 'threads -PolicyName into generated group and rule names' {
+            $out = Join-Path $TestDrive 'named'
+            $result = New-DefenderDcPolicy -Usb ReadOnly -PolicyName 'Kiosk lockdown' -OutputPath $out
+            (Get-Content -LiteralPath $result.GroupsXmlPath -Raw) | Should -Match 'Kiosk lockdown'
+            (Get-Content -LiteralPath $result.EnforceRulesXmlPath -Raw) | Should -Match 'Kiosk lockdown'
+        }
     }
 }
