@@ -1,3 +1,12 @@
+# Register-CimIndicationEvent is Windows-only. Define a no-op stub on non-Windows
+# so Pester can mock it in unit tests (same pattern as Get-DcPnpEntity wrapping
+# Get-CimInstance). The real cmdlet is used at runtime on Windows.
+if (-not (Get-Command Register-CimIndicationEvent -ErrorAction SilentlyContinue)) {
+    function Register-CimIndicationEvent {
+        param([string]$Query, [string]$SourceIdentifier)
+    }
+}
+
 function Get-DefenderDcDevice {
     <#
     .SYNOPSIS
@@ -82,5 +91,26 @@ function Get-DefenderDcDevice {
         return
     }
 
-    throw 'Get-DefenderDcDevice: -Watch is not implemented yet.'
+    $sourceId = "DdcuDeviceWatch-$([guid]::NewGuid().ToString('N'))"
+    $query = "SELECT * FROM __InstanceCreationEvent WITHIN 2 WHERE TargetInstance ISA 'Win32_PnPEntity'"
+    Register-CimIndicationEvent -Query $query -SourceIdentifier $sourceId | Out-Null
+    Write-Verbose 'Watching for device arrivals. Plug devices in one by one; Ctrl+C to stop.'
+
+    try {
+        $deadline = if ($TimeoutSeconds) { (Get-Date).AddSeconds($TimeoutSeconds) } else { [datetime]::MaxValue }
+        while ((Get-Date) -lt $deadline) {
+            # 1s poll keeps Ctrl+C responsive between events.
+            $evt = Wait-Event -SourceIdentifier $sourceId -Timeout 1
+            if ($null -eq $evt) { continue }
+            Remove-Event -EventIdentifier $evt.EventIdentifier
+            $device = ConvertTo-DcDevice -PnpEntity $evt.SourceEventArgs.NewEvent.TargetInstance
+            if ($null -eq $device) { continue }
+            if ($OutFile) { Add-DcDeviceRecord -Path $OutFile -Device $device }
+            $device
+        }
+    }
+    finally {
+        Unregister-Event -SourceIdentifier $sourceId -ErrorAction SilentlyContinue
+        Get-Event -SourceIdentifier $sourceId -ErrorAction SilentlyContinue | Remove-Event -ErrorAction SilentlyContinue
+    }
 }
