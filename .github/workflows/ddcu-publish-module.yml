@@ -11,6 +11,7 @@ permissions:
 jobs:
   publish:
     runs-on: windows-2025
+    environment: psgallery
     permissions:
       contents: write
     steps:
