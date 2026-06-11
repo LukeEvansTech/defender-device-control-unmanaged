@@ -1,12 +1,3 @@
-# Register-CimIndicationEvent is Windows-only. Define a no-op stub on non-Windows
-# so Pester can mock it in unit tests (same pattern as Get-DcPnpEntity wrapping
-# Get-CimInstance). The real cmdlet is used at runtime on Windows.
-if (-not (Get-Command Register-CimIndicationEvent -ErrorAction SilentlyContinue)) {
-    function Register-CimIndicationEvent {
-        param([string]$Query, [string]$SourceIdentifier)
-    }
-}
-
 function Get-DefenderDcDevice {
     <#
     .SYNOPSIS

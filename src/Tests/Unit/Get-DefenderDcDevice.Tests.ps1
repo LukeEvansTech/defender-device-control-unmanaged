@@ -6,6 +6,12 @@ BeforeAll {
     . (Join-Path $ModuleRoot 'Private\Test-DcIsWindows.ps1')
     . (Join-Path $ModuleRoot 'Public\Get-DefenderDcDevice.ps1')
 
+    # Register-CimIndicationEvent ships in CimCmdlets on Windows; stub it
+    # globally on macOS/Linux CI so Pester has something to mock.
+    if (-not (Get-Command Register-CimIndicationEvent -ErrorAction SilentlyContinue)) {
+        function global:Register-CimIndicationEvent { param([string]$Query, [string]$SourceIdentifier) }
+    }
+
     $script:FakeUsb = [pscustomobject]@{
         Name        = 'Kingston DataTraveler 3.0 USB Device'
         PNPDeviceID = 'USBSTOR\DISK&VEN_KINGSTON&PROD_DT&REV_1\SER123&0'
