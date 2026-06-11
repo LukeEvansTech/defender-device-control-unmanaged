@@ -7,6 +7,21 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 
 ## [Unreleased]
 
+## [1.1.0] - unreleased
+
+### Added
+- `New-DefenderDcPolicy`: craft custom Device Control policy XML from per-class
+  restriction flags (`-Usb ReadOnly,DenyExecute`, `-Wpd ReadOnly`,
+  `-Optical Block`, `Allow`) with approved-device exceptions
+  (`-AllowHardwareId`, `-AllowDeviceFile`, pipeline). Emits the standard
+  three-file shape (Groups + Audit/Enforce rules) with deterministic GUIDs so
+  regeneration is byte-identical.
+- `Get-DefenderDcDevice`: capture hardware identifiers of connected (or, with
+  `-Watch`, newly plugged-in) USB/WPD/optical devices; `-OutFile` writes the
+  JSON device list `New-DefenderDcPolicy -AllowDeviceFile` consumes.
+- `Set-DefenderDcPolicy` accepts `New-DefenderDcPolicy` output from the
+  pipeline; `-Mode` selects the audit or enforce rules file.
+
 ## [1.0.1] - 2026-05-25
 
 ### Fixed
