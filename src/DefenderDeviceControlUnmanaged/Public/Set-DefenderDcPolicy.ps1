@@ -70,6 +70,10 @@ function Set-DefenderDcPolicy {
 
     Craft and apply a custom policy in one pipeline.
 
+.INPUTS
+    PSCustomObject. An object with GroupsXmlPath, AuditRulesXmlPath, and/or
+    EnforceRulesXmlPath string properties, as emitted by New-DefenderDcPolicy.
+
 .LINK
     https://lukeevanstech.github.io/defender-device-control-unmanaged/
 #>
