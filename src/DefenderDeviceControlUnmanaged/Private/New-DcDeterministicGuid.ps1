@@ -13,6 +13,8 @@ function New-DcDeterministicGuid {
     .EXAMPLE
         New-DcDeterministicGuid -Seed 'ddcu:group:approved'
     #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseShouldProcessForStateChangingFunctions', '',
+        Justification = 'Pure function: derives a GUID string from a seed, changes no system state.')]
     [CmdletBinding()]
     [OutputType([string])]
     param(

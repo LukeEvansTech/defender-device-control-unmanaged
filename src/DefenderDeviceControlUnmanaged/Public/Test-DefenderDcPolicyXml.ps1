@@ -117,7 +117,7 @@ function Test-DefenderDcPolicyXml {
         }
     }
 
-    # Layer 2d: structural per-element checks via Read-DcPolicyXml — runs even when
+    # Layer 2d: structural per-element checks via Read-DcPolicyXml - runs even when
     # -SkipEngineValidation is set so callers (e.g. Set-DefenderDcPolicy
     # -SkipMpCmdRunValidation) still get "every PolicyRule has at least one <Entry>"
     # and "every Group/PolicyRule has an Id attribute" enforcement before any

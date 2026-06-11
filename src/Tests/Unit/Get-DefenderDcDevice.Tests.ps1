@@ -9,7 +9,7 @@ BeforeAll {
     # Register-CimIndicationEvent ships in CimCmdlets on Windows; stub it
     # globally on macOS/Linux CI so Pester has something to mock.
     if (-not (Get-Command Register-CimIndicationEvent -ErrorAction SilentlyContinue)) {
-        function global:Register-CimIndicationEvent { param([string]$Query, [string]$SourceIdentifier) }
+        function global:Register-CimIndicationEvent { param([string]$Query, [string]$SourceIdentifier) $null = $Query, $SourceIdentifier }
     }
 
     $script:FakeUsb = [pscustomobject]@{

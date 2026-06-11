@@ -1,12 +1,13 @@
 # New-DefenderDcPolicy
 
 ## SYNOPSIS
+
 Craft a custom Defender Device Control policy XML set from simple
 per-class restriction parameters.
 
 ## SYNTAX
 
-```
+```text
 New-DefenderDcPolicy [-Usb <String[]>] [-Wpd <String[]>] [-Optical <String[]>]
     [-AllowHardwareId <String[]>] [-AllowDevice <PSCustomObject[]>]
     [-AllowDeviceFile <String>] [-OutputPath <String>] [-PolicyName <String>]
@@ -14,6 +15,7 @@ New-DefenderDcPolicy [-Usb <String[]>] [-Wpd <String[]>] [-Optical <String[]>]
 ```
 
 ## DESCRIPTION
+
 Generates the same three-file policy shape this module ships
 (PolicyGroups.xml, PolicyRules.Audit.xml, PolicyRules.Enforce.xml) so
 the audit-first-then-enforce workflow stays a one-flag switch at apply
@@ -27,14 +29,16 @@ seeds), so regenerating the same policy yields byte-identical XML.
 ## EXAMPLES
 
 ### EXAMPLE 1
-```
+
+```powershell
 New-DefenderDcPolicy -Usb ReadOnly,DenyExecute -Wpd ReadOnly -OutputPath .\policy\
 ```
 
 USB read-only with no execute, WPD read-only; XML pair written to .\policy\.
 
 ### EXAMPLE 2
-```
+
+```powershell
 Get-DefenderDcDevice -Watch -OutFile .\approved.json
 New-DefenderDcPolicy -Usb ReadOnly -AllowDeviceFile .\approved.json -OutputPath .\policy\ |
     Set-DefenderDcPolicy -Mode Audit
@@ -43,7 +47,8 @@ New-DefenderDcPolicy -Usb ReadOnly -AllowDeviceFile .\approved.json -OutputPath 
 Capture approved sticks, craft a policy exempting them, apply in Audit mode.
 
 ### EXAMPLE 3
-```
+
+```powershell
 New-DefenderDcPolicy -Usb Block -Optical Block -AllowHardwareId 'USBSTOR\DiskKingstonDataTraveler_3.0'
 ```
 
@@ -52,6 +57,7 @@ Block USB and optical entirely except Kingston DataTraveler 3.0 models.
 ## PARAMETERS
 
 ### -Usb
+
 Restriction flags for removable storage (RemovableMediaDevices):
 ReadOnly, DenyExecute, Block, Allow. ReadOnly+DenyExecute may combine;
 Block and Allow are exclusive.
@@ -69,6 +75,7 @@ Accept wildcard characters: False
 ```
 
 ### -Wpd
+
 Restriction flags for WPD/MTP devices (phones, cameras). Same
 vocabulary as -Usb.
 
@@ -85,6 +92,7 @@ Accept wildcard characters: False
 ```
 
 ### -Optical
+
 Restriction flags for CD/DVD drives. Same vocabulary as -Usb.
 
 ```yaml
@@ -100,6 +108,7 @@ Accept wildcard characters: False
 ```
 
 ### -AllowHardwareId
+
 Hardware-ID strings exempted from all restrictions (model-wide match).
 
 ```yaml
@@ -115,6 +124,7 @@ Accept wildcard characters: False
 ```
 
 ### -AllowDevice
+
 Device objects from Get-DefenderDcDevice (pipeline-friendly). Each
 contributes its InstancePathId (serial-specific match).
 
@@ -131,6 +141,7 @@ Accept wildcard characters: False
 ```
 
 ### -AllowDeviceFile
+
 Path to a JSON device list written by Get-DefenderDcDevice -OutFile.
 
 ```yaml
@@ -146,6 +157,7 @@ Accept wildcard characters: False
 ```
 
 ### -OutputPath
+
 Directory for the generated XML files. Created if missing. Defaults
 to the current directory.
 
@@ -162,6 +174,7 @@ Accept wildcard characters: False
 ```
 
 ### -PolicyName
+
 Label woven into group/rule names. Defaults to 'Custom policy'.
 
 ```yaml
@@ -177,20 +190,25 @@ Accept wildcard characters: False
 ```
 
 ### CommonParameters
+
 This cmdlet supports the common parameters: -Debug, -ErrorAction, -ErrorVariable, -InformationAction, -InformationVariable, -OutVariable, -OutBuffer, -PipelineVariable, -Verbose, -WarningAction, and -WarningVariable. For more information, see [about_CommonParameters](http://go.microsoft.com/fwlink/?LinkID=113216).
 
 ## INPUTS
 
 ### PSCustomObject
+
 Device records from Get-DefenderDcDevice accepted via pipeline (ByValue).
 Each record's InstancePathId is added to the approved-devices exception group.
 
 ## OUTPUTS
 
-### PSCustomObject with type name DefenderDeviceControlUnmanaged.PolicyFiles
-###   GroupsXmlPath       - Absolute path to the written PolicyGroups.xml
-###   AuditRulesXmlPath   - Absolute path to the written PolicyRules.Audit.xml
-###   EnforceRulesXmlPath - Absolute path to the written PolicyRules.Enforce.xml
+`PSCustomObject` with type name
+`DefenderDeviceControlUnmanaged.PolicyFiles` containing:
+
+- **GroupsXmlPath** - Absolute path to the written PolicyGroups.xml
+- **AuditRulesXmlPath** - Absolute path to the written PolicyRules.Audit.xml
+- **EnforceRulesXmlPath** - Absolute path to the written
+  PolicyRules.Enforce.xml
 
 ## NOTES
 

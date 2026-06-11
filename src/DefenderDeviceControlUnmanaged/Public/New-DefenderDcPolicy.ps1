@@ -64,7 +64,7 @@ function New-DefenderDcPolicy {
     .LINK
         https://lukeevanstech.github.io/defender-device-control-unmanaged/
     #>
-    [CmdletBinding()]
+    [CmdletBinding(SupportsShouldProcess = $true)]
     [OutputType([pscustomobject])]
     param(
         [ValidateSet('ReadOnly','DenyExecute','Block','Allow')]
@@ -151,25 +151,27 @@ function New-DefenderDcPolicy {
             -AllowHardwareId $hardwareIds `
             -PolicyName $PolicyName
 
-        if (-not (Test-Path -LiteralPath $OutputPath -PathType Container)) {
-            New-Item -Path $OutputPath -ItemType Directory -Force | Out-Null
-        }
-        $resolvedOut = Convert-Path -LiteralPath $OutputPath
-
+        $resolvedOut = $PSCmdlet.GetUnresolvedProviderPathFromPSPath($OutputPath)
         $groupsPath  = Join-Path $resolvedOut 'PolicyGroups.xml'
         $auditPath   = Join-Path $resolvedOut 'PolicyRules.Audit.xml'
         $enforcePath = Join-Path $resolvedOut 'PolicyRules.Enforce.xml'
 
-        # All three strings are built before any write, so a failure cannot
-        # leave a partially-generated policy on disk. WriteAllText emits
-        # UTF-8 without BOM (the engine validator rejects BOMs).
-        [System.IO.File]::WriteAllText($groupsPath,  $xml.GroupsXml)
-        [System.IO.File]::WriteAllText($auditPath,   $xml.AuditRulesXml)
-        [System.IO.File]::WriteAllText($enforcePath, $xml.EnforceRulesXml)
+        if ($PSCmdlet.ShouldProcess($resolvedOut, 'Write Device Control policy XML files')) {
+            if (-not (Test-Path -LiteralPath $resolvedOut -PathType Container)) {
+                New-Item -Path $resolvedOut -ItemType Directory -Force | Out-Null
+            }
 
-        Write-Verbose "Wrote $groupsPath"
-        Write-Verbose "Wrote $auditPath"
-        Write-Verbose "Wrote $enforcePath"
+            # All three strings are built before any write, so a failure cannot
+            # leave a partially-generated policy on disk. WriteAllText emits
+            # UTF-8 without BOM (the engine validator rejects BOMs).
+            [System.IO.File]::WriteAllText($groupsPath,  $xml.GroupsXml)
+            [System.IO.File]::WriteAllText($auditPath,   $xml.AuditRulesXml)
+            [System.IO.File]::WriteAllText($enforcePath, $xml.EnforceRulesXml)
+
+            Write-Verbose "Wrote $groupsPath"
+            Write-Verbose "Wrote $auditPath"
+            Write-Verbose "Wrote $enforcePath"
+        }
 
         $allAllow = ($restrictions.Values | ForEach-Object { $_ -contains 'Allow' }) -notcontains $false
         if ($allAllow) {

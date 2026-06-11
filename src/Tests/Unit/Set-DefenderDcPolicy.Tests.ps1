@@ -6,7 +6,7 @@ BeforeAll {
     # module session-state so InModuleScope tests on macOS/Linux CI have something to mock.
     InModuleScope DefenderDeviceControlUnmanaged {
         if (-not (Get-Command Update-MpSignature -ErrorAction SilentlyContinue)) {
-            function global:Update-MpSignature { param($UpdateSource) }
+            function global:Update-MpSignature { param($UpdateSource) $null = $UpdateSource }
         }
     }
 }

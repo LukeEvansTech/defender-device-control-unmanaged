@@ -25,12 +25,12 @@ New-DefenderDcPolicy -Usb ReadOnly,DenyExecute -Wpd ReadOnly -Optical Block `
 
 Restriction flags per class (`-Usb`, `-Wpd`, `-Optical`):
 
-| Flag | Effect |
-|---|---|
-| `ReadOnly` | Deny write |
-| `DenyExecute` | Deny execute (combinable with `ReadOnly`) |
-| `Block` | Deny read+write+execute (exclusive) |
-| `Allow` | No restriction, audit visibility only (exclusive) |
+| Flag          | Effect                                            |
+| ------------- | ------------------------------------------------- |
+| `ReadOnly`    | Deny write                                        |
+| `DenyExecute` | Deny execute (combinable with `ReadOnly`)         |
+| `Block`       | Deny read+write+execute (exclusive)               |
+| `Allow`       | No restriction, audit visibility only (exclusive) |
 
 This writes the same three-file shape the module ships — `PolicyGroups.xml`,
 `PolicyRules.Audit.xml`, `PolicyRules.Enforce.xml` — so switching from audit
@@ -39,7 +39,7 @@ to enforce later is a one-flag change. Approved devices land in an
 they keep full access.
 
 GUIDs are deterministic: regenerate the same policy and the XML is
-byte-identical (clean git diffs).
+byte-identical (clean Git diffs).
 
 ## 3. Apply it
 
@@ -58,6 +58,6 @@ Validate first without applying: `Test-DefenderDcPolicyXml -Path .\policy\Policy
 ## Matching semantics
 
 - Devices captured by `Get-DefenderDcDevice` are exempted by
-  **InstancePathId** — serial-specific, approves *that* stick.
+  **InstancePathId** — serial-specific, approves _that_ stick.
 - Strings passed to `-AllowHardwareId` become **HardwareId** descriptors —
   model-wide, approves every device of that model.

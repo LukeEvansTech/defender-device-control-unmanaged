@@ -77,6 +77,8 @@ function Set-DefenderDcPolicy {
 .LINK
     https://lukeevanstech.github.io/defender-device-control-unmanaged/
 #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseProcessBlockForPipelineCommand', '',
+        Justification = 'Accepts one pipeline-bound PolicyFiles object and consumes its bound properties once.')]
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(Mandatory)]
@@ -136,7 +138,7 @@ function Set-DefenderDcPolicy {
         # Pipeline support: New-DefenderDcPolicy emits one PolicyFiles object
         # with both rules paths; -Mode picks the right one. Explicit
         # -RulesXmlPath always wins. (Single piped object, so the implicit
-        # end-block body sees its bound properties — no process block needed.)
+        # end-block body sees its bound properties - no process block needed.)
         if (-not $RulesXmlPath) {
             if ($Mode -eq 'Audit' -and $AuditRulesXmlPath)     { $RulesXmlPath = $AuditRulesXmlPath }
             if ($Mode -eq 'Enforce' -and $EnforceRulesXmlPath) { $RulesXmlPath = $EnforceRulesXmlPath }
@@ -189,7 +191,7 @@ function Set-DefenderDcPolicy {
         # Stop-Transcript throws "host is not currently transcribing" under -WhatIf
         # (Start-Transcript honors $WhatIfPreference and becomes a no-op). The
         # finally block must clean up regardless; swallow the benign case.
-        try { Stop-Transcript | Out-Null } catch { }
+        try { Stop-Transcript | Out-Null } catch { Write-Debug "Stop-Transcript skipped: $($_.Exception.Message)" }
         Write-Verbose "Set-DefenderDcPolicy transcript: $transcript"
     }
 }

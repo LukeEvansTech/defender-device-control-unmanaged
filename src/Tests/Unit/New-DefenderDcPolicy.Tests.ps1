@@ -53,6 +53,18 @@ Describe 'New-DefenderDcPolicy' {
             }
         }
 
+        It '-WhatIf returns result object but writes no files' {
+            $out = Join-Path $TestDrive 'whatif'
+            $result = New-DefenderDcPolicy -Usb ReadOnly -OutputPath $out -WhatIf
+            $result.GroupsXmlPath       | Should -Be (Join-Path $out 'PolicyGroups.xml')
+            $result.AuditRulesXmlPath   | Should -Be (Join-Path $out 'PolicyRules.Audit.xml')
+            $result.EnforceRulesXmlPath | Should -Be (Join-Path $out 'PolicyRules.Enforce.xml')
+            Test-Path -LiteralPath $out | Should -BeFalse
+            Test-Path -LiteralPath $result.GroupsXmlPath       | Should -BeFalse
+            Test-Path -LiteralPath $result.AuditRulesXmlPath   | Should -BeFalse
+            Test-Path -LiteralPath $result.EnforceRulesXmlPath | Should -BeFalse
+        }
+
         It 'writes files without a BOM' {
             $out = Join-Path $TestDrive 'bom'
             $result = New-DefenderDcPolicy -Usb ReadOnly -OutputPath $out
