@@ -212,4 +212,81 @@ Describe 'Set-DefenderDcPolicy' {
             }
         }
     }
+
+    Context 'pipeline input from New-DefenderDcPolicy' {
+        It 'GroupsXmlPath / AuditRulesXmlPath / EnforceRulesXmlPath accept pipeline-by-property-name' {
+            $cmd = Get-Command Set-DefenderDcPolicy
+            foreach ($name in 'GroupsXmlPath','AuditRulesXmlPath','EnforceRulesXmlPath') {
+                $attr = $cmd.Parameters[$name].Attributes |
+                    Where-Object { $_ -is [System.Management.Automation.ParameterAttribute] }
+                $attr.ValueFromPipelineByPropertyName | Should -BeTrue -Because $name
+            }
+        }
+
+        It 'Mode Audit consumes the piped AuditRulesXmlPath' {
+            # $TestDrive does not flow into InModuleScope; pass it explicitly.
+            InModuleScope DefenderDeviceControlUnmanaged -Parameters @{ TestRoot = $TestDrive } {
+                param($TestRoot)
+                Mock Test-DcIsElevated { $true }
+                Mock Get-DcComputerStatus { [pscustomobject]@{ AMServiceEnabled = $true; AMEngineVersion = '0.0'; IsTamperProtected = $false } }
+                Mock Start-DcTranscript { Join-Path $TestRoot 'fake.transcript.txt' }
+                Mock Stop-Transcript { }
+                Mock Test-DefenderDcPolicyXml { $true }
+                Mock Remove-DcPolicy { }
+                Mock Get-DcRegistryManifest { @() }
+                Mock Invoke-DcRegistryWrites { }
+                Mock Update-MpSignature { }
+
+                $groups  = Join-Path $TestRoot 'PolicyGroups.xml'
+                $audit   = Join-Path $TestRoot 'PolicyRules.Audit.xml'
+                $enforce = Join-Path $TestRoot 'PolicyRules.Enforce.xml'
+                '<Groups></Groups>' | Set-Content -LiteralPath $groups
+                '<PolicyRules></PolicyRules>' | Set-Content -LiteralPath $audit
+                '<PolicyRules></PolicyRules>' | Set-Content -LiteralPath $enforce
+
+                $files = [pscustomobject]@{
+                    GroupsXmlPath       = $groups
+                    AuditRulesXmlPath   = $audit
+                    EnforceRulesXmlPath = $enforce
+                }
+                $files | Set-DefenderDcPolicy -Mode Audit -SkipGpUpdate -Confirm:$false
+
+                Should -Invoke Get-DcRegistryManifest -Times 1 -Exactly -ParameterFilter {
+                    $RulesXmlPath -like '*PolicyRules.Audit.xml' -and $GroupsXmlPath -like '*PolicyGroups.xml'
+                }
+            }
+        }
+
+        It 'Mode Enforce consumes the piped EnforceRulesXmlPath' {
+            InModuleScope DefenderDeviceControlUnmanaged -Parameters @{ TestRoot = $TestDrive } {
+                param($TestRoot)
+                Mock Test-DcIsElevated { $true }
+                Mock Get-DcComputerStatus { [pscustomobject]@{ AMServiceEnabled = $true; AMEngineVersion = '0.0'; IsTamperProtected = $false } }
+                Mock Start-DcTranscript { Join-Path $TestRoot 'fake.transcript.txt' }
+                Mock Stop-Transcript { }
+                Mock Test-DefenderDcPolicyXml { $true }
+                Mock Remove-DcPolicy { }
+                Mock Get-DcRegistryManifest { @() }
+                Mock Invoke-DcRegistryWrites { }
+                Mock Update-MpSignature { }
+
+                $groups  = Join-Path $TestRoot 'g.xml'
+                $audit   = Join-Path $TestRoot 'a.xml'
+                $enforce = Join-Path $TestRoot 'e.xml'
+                '<Groups></Groups>' | Set-Content -LiteralPath $groups
+                '<PolicyRules></PolicyRules>' | Set-Content -LiteralPath $audit
+                '<PolicyRules></PolicyRules>' | Set-Content -LiteralPath $enforce
+
+                [pscustomobject]@{
+                    GroupsXmlPath       = $groups
+                    AuditRulesXmlPath   = $audit
+                    EnforceRulesXmlPath = $enforce
+                } | Set-DefenderDcPolicy -Mode Enforce -SkipGpUpdate -Confirm:$false
+
+                Should -Invoke Get-DcRegistryManifest -Times 1 -Exactly -ParameterFilter {
+                    $RulesXmlPath -like '*e.xml'
+                }
+            }
+        }
+    }
 }
