@@ -47,16 +47,16 @@ Pure XML generation. No registry access, no elevation, runs on any platform
 
 ### Parameters
 
-| Parameter | Type | Notes |
-|---|---|---|
-| `-Usb` | restriction flags | Removable storage (`RemovableMediaDevices`) |
-| `-Wpd` | restriction flags | Phones/cameras (`WpdDevices`) |
-| `-Optical` | restriction flags | CD/DVD (`CdRomDevices`) |
-| `-AllowHardwareId` | `string[]` | Inline hardware-ID strings exempted from all restrictions |
-| `-AllowDevice` | device objects, `ValueFromPipeline` | Objects from `Get-DefenderDcDevice` |
-| `-AllowDeviceFile` | `string` (path) | JSON file written by `Get-DefenderDcDevice -OutFile` |
-| `-OutputPath` | `string` (directory) | Defaults to the current directory |
-| `-PolicyName` | `string` | Optional label woven into rule names; default `Custom policy` |
+| Parameter          | Type                                | Notes                                                         |
+| ------------------ | ----------------------------------- | ------------------------------------------------------------- |
+| `-Usb`             | restriction flags                   | Removable storage (`RemovableMediaDevices`)                   |
+| `-Wpd`             | restriction flags                   | Phones/cameras (`WpdDevices`)                                 |
+| `-Optical`         | restriction flags                   | CD/DVD (`CdRomDevices`)                                       |
+| `-AllowHardwareId` | `string[]`                          | Inline hardware-ID strings exempted from all restrictions     |
+| `-AllowDevice`     | device objects, `ValueFromPipeline` | Objects from `Get-DefenderDcDevice`                           |
+| `-AllowDeviceFile` | `string` (path)                     | JSON file written by `Get-DefenderDcDevice -OutFile`          |
+| `-OutputPath`      | `string` (directory)                | Defaults to the current directory                             |
+| `-PolicyName`      | `string`                            | Optional label woven into rule names; default `Custom policy` |
 
 At least one class parameter (`-Usb`, `-Wpd`, `-Optical`) is required.
 `-AllowHardwareId`, `-AllowDevice`, and `-AllowDeviceFile` are independent,
@@ -68,21 +68,21 @@ All exception parameters are optional — the minimal call is e.g.
 
 Values per class parameter (comma-separated, validated):
 
-| Flag | Meaning | Valid combos |
-|---|---|---|
-| `ReadOnly` | Deny write | May combine with `DenyExecute` |
-| `DenyExecute` | Deny execute | May combine with `ReadOnly` |
-| `Block` | Deny read+write+execute | Exclusive |
-| `Allow` | No restriction; audit visibility only | Exclusive |
+| Flag          | Meaning                               | Valid combos                   |
+| ------------- | ------------------------------------- | ------------------------------ |
+| `ReadOnly`    | Deny write                            | May combine with `DenyExecute` |
+| `DenyExecute` | Deny execute                          | May combine with `ReadOnly`    |
+| `Block`       | Deny read+write+execute               | Exclusive                      |
+| `Allow`       | No restriction; audit visibility only | Exclusive                      |
 
 Flag-to-AccessMask mapping uses the real Device Control masks, matching the
 shipped starter XMLs:
 
-| Class | Write | Execute | Read | `Block` mask |
-|---|---|---|---|---|
-| Usb (disk-style) | 2 | 4 | 1 | 7 |
-| Optical (disk-style) | 2 | 4 | 1 | 7 |
-| Wpd | 16 | 32 | 8 | 56 |
+| Class                | Write | Execute | Read | `Block` mask |
+| -------------------- | ----- | ------- | ---- | ------------ |
+| Usb (disk-style)     | 2     | 4       | 1    | 7            |
+| Optical (disk-style) | 2     | 4       | 1    | 7            |
+| Wpd                  | 16    | 32      | 8    | 56           |
 
 ### Output
 
@@ -114,7 +114,7 @@ Returns a result object for piping:
 - Every class deny rule references it in `ExcludedIdList`, so approved
   devices are exempt from all class restrictions (full access).
 - Descriptor mapping: device objects (pipeline / `-AllowDeviceFile`)
-  contribute their `InstancePathId` (serial-specific — approves *that* stick,
+  contribute their `InstancePathId` (serial-specific — approves _that_ stick,
   not every stick of that model); raw `-AllowHardwareId` strings are emitted
   as `<HardwareId>` descriptors (model-wide match).
 
