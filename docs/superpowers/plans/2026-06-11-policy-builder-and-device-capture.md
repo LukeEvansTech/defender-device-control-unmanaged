@@ -1809,7 +1809,7 @@ to enforce later is a one-flag change. Approved devices land in an
 they keep full access.
 
 GUIDs are deterministic: regenerate the same policy and the XML is
-byte-identical (clean git diffs).
+byte-identical (clean Git diffs).
 
 ## 3. Apply it
 
@@ -1832,7 +1832,7 @@ Validate first without applying: `Test-DefenderDcPolicyXml -Path .\policy\Policy
 - Strings passed to `-AllowHardwareId` become **HardwareId** descriptors —
   model-wide, approves every device of that model.
 
-- [ ] **Step 3: Write the two cmdlet reference pages** (platyPS layout, matching `docs/docs/reference/cmdlets/Get-DefenderDcPolicy.md`: H1 name, `## SYNOPSIS`, `## SYNTAX` fenced block, `## DESCRIPTION`, `## EXAMPLES` with `### EXAMPLE n`, `## PARAMETERS` with per-parameter yaml blocks, `## INPUTS`/`## OUTPUTS`/`## NOTES`/`## RELATED LINKS`).
+- [ ] **Step 3: Write the two cmdlet reference pages** (platyPS layout, matching `docs/docs/reference/cmdlets/Get-DefenderDcPolicy.md`: H1 name, `## SYNOPSIS`, `## SYNTAX` fenced block, `## DESCRIPTION`, `## EXAMPLES` with `### EXAMPLE n`, `## PARAMETERS` with per-parameter YAML blocks, `## INPUTS`/`## OUTPUTS`/`## NOTES`/`## RELATED LINKS`).
       Derive SYNOPSIS/DESCRIPTION/EXAMPLES verbatim from the comment-based help written in Tasks 3 and 6; document every parameter
       (`-Usb`, `-Wpd`, `-Optical`, `-AllowHardwareId`, `-AllowDevice`, `-AllowDeviceFile`, `-OutputPath`, `-PolicyName` / `-Watch`, `-TimeoutSeconds`, `-OutFile`) with Type, Required, Default value, and Accept pipeline input flags consistent with the implementations.
 
