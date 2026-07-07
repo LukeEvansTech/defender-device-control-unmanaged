@@ -1,0 +1,4 @@
+[codespell]
+# "SER" appears in USB device-ID examples (e.g. USBSTOR\DISK...\SER&0);
+# it is a device-ID token, not a misspelling of "SET".
+ignore-words-list = ser

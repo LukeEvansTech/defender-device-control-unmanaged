@@ -123,7 +123,7 @@ Returns a result object for piping:
 Group/rule/entry IDs are derived (UUIDv5-style: SHA-1 of a fixed namespace
 GUID + a stable seed such as `ddcu:rule:usb` or `ddcu:group:approved`) rather
 than random. Regenerating the same policy yields byte-identical XML — clean
-git diffs and exact golden-file tests. Seeds differ from the shipped starter
+Git diffs and exact golden-file tests. Seeds differ from the shipped starter
 XML GUIDs, so a generated policy never collides with the starter policy.
 
 ## Cmdlet 2: `Get-DefenderDcDevice`
