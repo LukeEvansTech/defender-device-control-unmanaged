@@ -6,7 +6,14 @@ BeforeAll {
     # module session-state so InModuleScope tests on macOS/Linux CI have something to mock.
     InModuleScope DefenderDeviceControlUnmanaged {
         if (-not (Get-Command Update-MpSignature -ErrorAction SilentlyContinue)) {
-            function global:Update-MpSignature { param($UpdateSource) }
+            # PSScriptAnalyzer: ignore[PSReviewUnusedParameter] - signature-only stub.
+            # Set-DefenderDcPolicy calls `Update-MpSignature -UpdateSource MMPC`, so the
+            # parameter must exist for that call to bind; the body is intentionally empty.
+            function global:Update-MpSignature {
+                [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSReviewUnusedParameter', 'UpdateSource',
+                    Justification = 'Signature-only stub; parameter exists so the module call binds.')]
+                param($UpdateSource)
+            }
         }
     }
 }
