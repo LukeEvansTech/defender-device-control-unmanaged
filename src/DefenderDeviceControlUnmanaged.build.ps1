@@ -92,8 +92,10 @@ Enter-Build {
     # Ensure our builds fail until if below a minimum defined code test coverage threshold
     $script:coverageThreshold = 30
 
-    [version]$script:MinPesterVersion = '5.2.2'
-    [version]$script:MaxPesterVersion = '5.99.99'
+    # Keep in step with the Pester range pinned in .github/workflows/ddcu-test-on-windows.yml
+    # and ddcu-publish-module.yml. A mismatch here is what let CI drift onto a new major.
+    [version]$script:MinPesterVersion = '6.0.1'
+    [version]$script:MaxPesterVersion = '6.99.99'
     $script:testOutputFormat = 'NUnitXML'
 } #Enter-Build
 

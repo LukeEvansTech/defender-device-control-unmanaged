@@ -34,13 +34,19 @@ jobs:
 
       - name: Install Pester
         shell: pwsh
-        run: Install-Module -Name Pester -MinimumVersion 5.5.0 -Force -SkipPublisherCheck -Scope CurrentUser
+        run: Install-Module -Name Pester -MinimumVersion 6.0.1 -MaximumVersion 6.99.99 -Force -SkipPublisherCheck -Scope CurrentUser
 
       - name: Re-run unit tests as publish guard
         shell: pwsh
         run: |
+          # Pin the import too: install-time capping alone still lets Invoke-Pester
+          # auto-load a newer major if one is present on the runner.
+          Import-Module -Name Pester -MinimumVersion 6.0.1 -MaximumVersion 6.99.99 -Force -ErrorAction Stop
           $config = New-PesterConfiguration
           $config.Run.Path = './src/Tests/Unit'
+          # Required: Invoke-Pester -Configuration returns nothing unless PassThru is set,
+          # which leaves $result null and silently disables the FailedCount gate below.
+          $config.Run.PassThru = $true
           $config.Output.Verbosity = 'Detailed'
           $r = Invoke-Pester -Configuration $config
           if ($r.FailedCount -gt 0) { exit 1 }
