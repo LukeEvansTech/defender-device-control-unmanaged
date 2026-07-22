@@ -19,13 +19,13 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install Pester 5.x
+      - name: Install Pester 6.x
         shell: pwsh
         run: |
           # Force TLS 1.2 before any PSGallery call. Harmless on pwsh 7+
           # (already the default) but kept symmetric with the 5.1 job below.
           [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-          Install-Module -Name Pester -MinimumVersion 5.5.0 -Force -SkipPublisherCheck -Scope CurrentUser
+          Install-Module -Name Pester -MinimumVersion 6.0.1 -MaximumVersion 6.99.99 -Force -SkipPublisherCheck -Scope CurrentUser
 
       - name: Import module (smoke check)
         shell: pwsh
@@ -40,8 +40,14 @@ jobs:
       - name: Run Pester unit tests
         shell: pwsh
         run: |
+          # Pin the import too: install-time capping alone still lets Invoke-Pester
+          # auto-load a newer major if one is present on the runner.
+          Import-Module -Name Pester -MinimumVersion 6.0.1 -MaximumVersion 6.99.99 -Force -ErrorAction Stop
           $config = New-PesterConfiguration
           $config.Run.Path = './src/Tests/Unit'
+          # Required: Invoke-Pester -Configuration returns nothing unless PassThru is set,
+          # which leaves $result null and silently disables the FailedCount gate below.
+          $config.Run.PassThru = $true
           $config.Output.Verbosity = 'Detailed'
           $config.TestResult.Enabled = $true
           $config.TestResult.OutputPath = 'pester-pwsh.xml'
@@ -71,7 +77,7 @@ jobs:
         with:
           persist-credentials: false
 
-      - name: Install Pester 5.x
+      - name: Install Pester 6.x
         shell: powershell
         run: |
           # Windows PowerShell 5.1 negotiates TLS 1.0 by default; the
@@ -80,7 +86,7 @@ jobs:
           # search criteria and module name 'Pester'." Pin TLS 1.2 before
           # any web call.
           [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-          Install-Module -Name Pester -MinimumVersion 5.5.0 -Force -SkipPublisherCheck -Scope CurrentUser
+          Install-Module -Name Pester -MinimumVersion 6.0.1 -MaximumVersion 6.99.99 -Force -SkipPublisherCheck -Scope CurrentUser
 
       - name: Import module (smoke check)
         shell: powershell
@@ -95,8 +101,14 @@ jobs:
       - name: Run Pester unit tests
         shell: powershell
         run: |
+          # Pin the import too: install-time capping alone still lets Invoke-Pester
+          # auto-load a newer major if one is present on the runner.
+          Import-Module -Name Pester -MinimumVersion 6.0.1 -MaximumVersion 6.99.99 -Force -ErrorAction Stop
           $config = New-PesterConfiguration
           $config.Run.Path = './src/Tests/Unit'
+          # Required: Invoke-Pester -Configuration returns nothing unless PassThru is set,
+          # which leaves $result null and silently disables the FailedCount gate below.
+          $config.Run.PassThru = $true
           $config.Output.Verbosity = 'Detailed'
           $config.TestResult.Enabled = $true
           $config.TestResult.OutputPath = 'pester-powershell.xml'
