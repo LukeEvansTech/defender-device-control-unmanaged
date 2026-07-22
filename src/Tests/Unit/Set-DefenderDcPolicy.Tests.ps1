@@ -199,6 +199,12 @@ Describe 'Set-DefenderDcPolicy' {
             InModuleScope DefenderDeviceControlUnmanaged {
                 Mock Test-DcIsElevated { $true }
                 Mock Get-DcComputerStatus { [pscustomobject]@{ AMServiceEnabled = $true; AMEngineVersion = '0.0'; IsTamperProtected = $false } }
+                # Because the transcript helpers stay unmocked, the real Start-DcTranscript
+                # runs and probes its log directory with Test-Path -LiteralPath. That call
+                # can never match the '*.xml' filter below, so a default mock is required:
+                # Pester 5 quietly fell through to the real Test-Path, but Pester 6 throws
+                # "No mock ... matched the call" when no filter matches and no default exists.
+                Mock Test-Path { $true }
                 Mock Test-Path { $true } -ParameterFilter { $LiteralPath -like '*.xml' }
                 Mock Test-DefenderDcPolicyXml { $true }
                 Mock Get-DcRegistryManifest { @([pscustomobject]@{ Path='x'; Name='n'; Type='DWord'; Value=1 }) }
