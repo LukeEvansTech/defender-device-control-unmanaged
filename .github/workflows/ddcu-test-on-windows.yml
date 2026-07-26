@@ -15,17 +15,17 @@ jobs:
     runs-on: windows-2025
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Install Pester 5.x
+      - name: Install Pester 6.x
         shell: pwsh
         run: |
           # Force TLS 1.2 before any PSGallery call. Harmless on pwsh 7+
           # (already the default) but kept symmetric with the 5.1 job below.
           [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-          Install-Module -Name Pester -MinimumVersion 5.5.0 -Force -SkipPublisherCheck -Scope CurrentUser
+          Install-Module -Name Pester -MinimumVersion 6.0.1 -MaximumVersion 6.99.99 -Force -SkipPublisherCheck -Scope CurrentUser
 
       - name: Import module (smoke check)
         shell: pwsh
@@ -40,8 +40,14 @@ jobs:
       - name: Run Pester unit tests
         shell: pwsh
         run: |
+          # Pin the import too: install-time capping alone still lets Invoke-Pester
+          # auto-load a newer major if one is present on the runner.
+          Import-Module -Name Pester -MinimumVersion 6.0.1 -MaximumVersion 6.99.99 -Force -ErrorAction Stop
           $config = New-PesterConfiguration
           $config.Run.Path = './src/Tests/Unit'
+          # Required: Invoke-Pester -Configuration returns nothing unless PassThru is set,
+          # which leaves $result null and silently disables the FailedCount gate below.
+          $config.Run.PassThru = $true
           $config.Output.Verbosity = 'Detailed'
           $config.TestResult.Enabled = $true
           $config.TestResult.OutputPath = 'pester-pwsh.xml'
@@ -49,12 +55,15 @@ jobs:
           $config.CodeCoverage.Path = './src/DefenderDeviceControlUnmanaged'
           $config.CodeCoverage.OutputPath = 'coverage-pwsh.xml'
           $result = Invoke-Pester -Configuration $config
+          # Defense in depth: if PassThru is ever dropped, $result is $null and the
+          # FailedCount gate silently passes. Fail loud instead of failing open.
+          if ($null -eq $result) { throw 'Pester returned no result object - Run.PassThru must be $true.' }
           Write-Host "Coverage: $($result.CodeCoverage.CoveragePercent)%" -ForegroundColor Cyan
           if ($result.FailedCount -gt 0) { exit 1 }
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: pester-pwsh
           path: |
@@ -67,11 +76,11 @@ jobs:
     runs-on: windows-2025
     steps:
       - name: Checkout
-        uses: actions/checkout@df4cb1c069e1874edd31b4311f1884172cec0e10 # v6
+        uses: actions/checkout@3d3c42e5aac5ba805825da76410c181273ba90b1 # v7.0.1
         with:
           persist-credentials: false
 
-      - name: Install Pester 5.x
+      - name: Install Pester 6.x
         shell: powershell
         run: |
           # Windows PowerShell 5.1 negotiates TLS 1.0 by default; the
@@ -80,7 +89,7 @@ jobs:
           # search criteria and module name 'Pester'." Pin TLS 1.2 before
           # any web call.
           [Net.ServicePointManager]::SecurityProtocol = [Net.SecurityProtocolType]::Tls12
-          Install-Module -Name Pester -MinimumVersion 5.5.0 -Force -SkipPublisherCheck -Scope CurrentUser
+          Install-Module -Name Pester -MinimumVersion 6.0.1 -MaximumVersion 6.99.99 -Force -SkipPublisherCheck -Scope CurrentUser
 
       - name: Import module (smoke check)
         shell: powershell
@@ -95,8 +104,14 @@ jobs:
       - name: Run Pester unit tests
         shell: powershell
         run: |
+          # Pin the import too: install-time capping alone still lets Invoke-Pester
+          # auto-load a newer major if one is present on the runner.
+          Import-Module -Name Pester -MinimumVersion 6.0.1 -MaximumVersion 6.99.99 -Force -ErrorAction Stop
           $config = New-PesterConfiguration
           $config.Run.Path = './src/Tests/Unit'
+          # Required: Invoke-Pester -Configuration returns nothing unless PassThru is set,
+          # which leaves $result null and silently disables the FailedCount gate below.
+          $config.Run.PassThru = $true
           $config.Output.Verbosity = 'Detailed'
           $config.TestResult.Enabled = $true
           $config.TestResult.OutputPath = 'pester-powershell.xml'
@@ -104,12 +119,15 @@ jobs:
           $config.CodeCoverage.Path = './src/DefenderDeviceControlUnmanaged'
           $config.CodeCoverage.OutputPath = 'coverage-powershell.xml'
           $result = Invoke-Pester -Configuration $config
+          # Defense in depth: if PassThru is ever dropped, $result is $null and the
+          # FailedCount gate silently passes. Fail loud instead of failing open.
+          if ($null -eq $result) { throw 'Pester returned no result object - Run.PassThru must be $true.' }
           Write-Host "Coverage: $($result.CodeCoverage.CoveragePercent)%" -ForegroundColor Cyan
           if ($result.FailedCount -gt 0) { exit 1 }
 
       - name: Upload test results
         if: always()
-        uses: actions/upload-artifact@b7c566a772e6b6bfb58ed0dc250532a479d7789f # v6
+        uses: actions/upload-artifact@043fb46d1a93c77aae656e7c1c64a875d1fc6a0a # v7.0.1
         with:
           name: pester-powershell
           path: |
