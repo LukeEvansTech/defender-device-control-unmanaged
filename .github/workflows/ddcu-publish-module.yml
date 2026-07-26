@@ -49,6 +49,9 @@ jobs:
           $config.Run.PassThru = $true
           $config.Output.Verbosity = 'Detailed'
           $r = Invoke-Pester -Configuration $config
+          # Defense in depth: if PassThru is ever dropped, $r is $null and the
+          # FailedCount gate silently passes. Fail loud instead of failing open.
+          if ($null -eq $r) { throw 'Pester returned no result object - Run.PassThru must be $true.' }
           if ($r.FailedCount -gt 0) { exit 1 }
 
       - name: Publish to PowerShell Gallery
