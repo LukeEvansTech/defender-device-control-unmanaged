@@ -55,6 +55,9 @@ jobs:
           $config.CodeCoverage.Path = './src/DefenderDeviceControlUnmanaged'
           $config.CodeCoverage.OutputPath = 'coverage-pwsh.xml'
           $result = Invoke-Pester -Configuration $config
+          # Defense in depth: if PassThru is ever dropped, $result is $null and the
+          # FailedCount gate silently passes. Fail loud instead of failing open.
+          if ($null -eq $result) { throw 'Pester returned no result object - Run.PassThru must be $true.' }
           Write-Host "Coverage: $($result.CodeCoverage.CoveragePercent)%" -ForegroundColor Cyan
           if ($result.FailedCount -gt 0) { exit 1 }
 
@@ -116,6 +119,9 @@ jobs:
           $config.CodeCoverage.Path = './src/DefenderDeviceControlUnmanaged'
           $config.CodeCoverage.OutputPath = 'coverage-powershell.xml'
           $result = Invoke-Pester -Configuration $config
+          # Defense in depth: if PassThru is ever dropped, $result is $null and the
+          # FailedCount gate silently passes. Fail loud instead of failing open.
+          if ($null -eq $result) { throw 'Pester returned no result object - Run.PassThru must be $true.' }
           Write-Host "Coverage: $($result.CodeCoverage.CoveragePercent)%" -ForegroundColor Cyan
           if ($result.FailedCount -gt 0) { exit 1 }
 
