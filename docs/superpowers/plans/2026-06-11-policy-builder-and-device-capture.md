@@ -9,33 +9,37 @@
 **Tech Stack:** PowerShell (5.1 + 7.x compatible), Pester 5, CIM cmdlets. House style: one function per file, `Dc` prefix for Private helpers, `DefenderDc` for Public, comment-based help mandatory (a unit test enforces SYNOPSIS + EXAMPLE on every exported function), `Set-StrictMode -Version Latest` inside function bodies, errors thrown as `"FunctionName: message"`.
 
 **Key paths:**
+
 - Module source: `src/DefenderDeviceControlUnmanaged/` (`Public/`, `Private/`, `policy/`, `examples/`)
 - Tests: `src/Tests/Unit/<FunctionName>.Tests.ps1`
 - The dev psm1 auto-dot-sources `Public/*.ps1` + `Private/*.ps1` and exports public basenames — adding files needs **no psm1 change**, but `psd1 FunctionsToExport` and `ExportedFunctions.Tests.ps1` must be updated (Task 9).
 
 **Run tests with:**
+
 ```powershell
 pwsh -NoProfile -Command "Invoke-Pester -Path src/Tests/Unit/<File>.Tests.ps1 -Output Detailed"
 ```
+
 (On this macOS dev box `pwsh` is available; CI also runs Windows PowerShell 5.1 — avoid PS7-only syntax: no `??`, no `?.`, no `-AsArray` on ConvertTo-Json, no ternary.)
 
 **AccessMask reference (from the shipped starter XMLs — do not invent other values):**
 
-| Class | PrimaryId | Read | Write | Execute |
-|---|---|---|---|---|
-| Usb | RemovableMediaDevices | 1 | 2 | 4 |
-| Optical | CdRomDevices | 1 | 2 | 4 |
-| Wpd | WpdDevices | 8 | 16 | 32 |
+| Class   | PrimaryId             | Read | Write | Execute |
+| ------- | --------------------- | ---- | ----- | ------- |
+| Usb     | RemovableMediaDevices | 1    | 2     | 4       |
+| Optical | CdRomDevices          | 1    | 2     | 4       |
+| Wpd     | WpdDevices            | 8    | 16    | 32      |
 
 Entry patterns (match starter XMLs exactly): Audit file → `AuditAllowed` with `<Options>2`; Enforce file → `Deny` with `<Options>0` **plus** `AuditDenied` with `<Options>3`. `<Type>` is a child element of `<Entry>`, never an attribute. No `<?xml?>` declaration, no BOM (the module's own `Test-DefenderDcPolicyXml` rejects both).
 
 ---
 
-### Task 1: Private helper `New-DcDeterministicGuid`
+## Task 1: Private helper `New-DcDeterministicGuid`
 
 Deterministic UUIDv5-style GUIDs so regenerating a policy yields byte-identical XML (clean diffs, exact tests).
 
 **Files:**
+
 - Create: `src/DefenderDeviceControlUnmanaged/Private/New-DcDeterministicGuid.ps1`
 - Test: `src/Tests/Unit/New-DcDeterministicGuid.Tests.ps1`
 
@@ -146,11 +150,12 @@ git commit -m "feat: add New-DcDeterministicGuid private helper"
 
 ---
 
-### Task 2: Private helper `ConvertTo-DcPolicyXml`
+## Task 2: Private helper `ConvertTo-DcPolicyXml`
 
 The XML generation core: normalized restrictions in, three XML strings out. All policy-semantics knowledge (masks, entry patterns, exclusion wiring) lives here.
 
 **Files:**
+
 - Create: `src/DefenderDeviceControlUnmanaged/Private/ConvertTo-DcPolicyXml.ps1`
 - Test: `src/Tests/Unit/ConvertTo-DcPolicyXml.Tests.ps1`
 
@@ -477,11 +482,12 @@ git commit -m "feat: add ConvertTo-DcPolicyXml policy generation core"
 
 ---
 
-### Task 3: Public cmdlet `New-DefenderDcPolicy`
+## Task 3: Public cmdlet `New-DefenderDcPolicy`
 
 Parameter surface, flag-combo validation, exception merging (inline + file + pipeline), file writing, result object.
 
 **Files:**
+
 - Create: `src/DefenderDeviceControlUnmanaged/Public/New-DefenderDcPolicy.ps1`
 - Test: `src/Tests/Unit/New-DefenderDcPolicy.Tests.ps1`
 
@@ -784,11 +790,12 @@ git commit -m "feat: add New-DefenderDcPolicy policy builder cmdlet"
 
 ---
 
-### Task 4: Private helper `ConvertTo-DcDevice`
+## Task 4: Private helper `ConvertTo-DcDevice`
 
 Converts one PnP entity (CIM instance, or any object with the same properties — that's what makes it testable) into the module's device record. Returns nothing for device classes we don't track.
 
 **Files:**
+
 - Create: `src/DefenderDeviceControlUnmanaged/Private/ConvertTo-DcDevice.ps1`
 - Test: `src/Tests/Unit/ConvertTo-DcDevice.Tests.ps1`
 
@@ -955,11 +962,12 @@ git commit -m "feat: add ConvertTo-DcDevice PnP classification helper"
 
 ---
 
-### Task 5: Private helpers `Get-DcPnpEntity` + `Add-DcDeviceRecord`
+## Task 5: Private helpers `Get-DcPnpEntity` + `Add-DcDeviceRecord`
 
 A thin mockable CIM wrapper (same pattern as the existing `Get-DcComputerStatus` wrapping `Get-MpComputerStatus`), and the JSON append/dedupe writer for `-OutFile`.
 
 **Files:**
+
 - Create: `src/DefenderDeviceControlUnmanaged/Private/Get-DcPnpEntity.ps1`
 - Create: `src/DefenderDeviceControlUnmanaged/Private/Add-DcDeviceRecord.ps1`
 - Test: `src/Tests/Unit/Add-DcDeviceRecord.Tests.ps1`
@@ -1107,9 +1115,10 @@ git commit -m "feat: add Get-DcPnpEntity and Add-DcDeviceRecord helpers"
 
 ---
 
-### Task 6: Public cmdlet `Get-DefenderDcDevice` — snapshot mode + `-OutFile`
+## Task 6: Public cmdlet `Get-DefenderDcDevice` — snapshot mode + `-OutFile`
 
 **Files:**
+
 - Create: `src/DefenderDeviceControlUnmanaged/Public/Get-DefenderDcDevice.ps1`
 - Test: `src/Tests/Unit/Get-DefenderDcDevice.Tests.ps1`
 
@@ -1314,9 +1323,10 @@ git commit -m "feat: add Get-DefenderDcDevice snapshot mode"
 
 ---
 
-### Task 7: `Get-DefenderDcDevice -Watch` (live capture)
+## Task 7: `Get-DefenderDcDevice -Watch` (live capture)
 
 **Files:**
+
 - Modify: `src/DefenderDeviceControlUnmanaged/Public/Get-DefenderDcDevice.ps1` (replace the `throw '... not implemented'` line)
 - Modify: `src/Tests/Unit/Get-DefenderDcDevice.Tests.ps1` (add a Describe block)
 
@@ -1444,11 +1454,12 @@ git commit -m "feat: add Get-DefenderDcDevice -Watch live capture"
 
 ---
 
-### Task 8: `Set-DefenderDcPolicy` pipeline support
+## Task 8: `Set-DefenderDcPolicy` pipeline support
 
 Accept the builder's result object by property name; `-Mode` selects between the piped audit/enforce rules paths. An explicit `-RulesXmlPath` always wins. The function body is an implicit `end` block — fine here, because exactly one `PolicyFiles` object is ever piped; document that in a comment.
 
 **Files:**
+
 - Modify: `src/DefenderDeviceControlUnmanaged/Public/Set-DefenderDcPolicy.ps1`
 - Modify: `src/Tests/Unit/Set-DefenderDcPolicy.Tests.ps1` (append a Context)
 
@@ -1578,7 +1589,7 @@ insert:
 
 Add comment-based help for the two new parameters (after the `.PARAMETER RulesXmlPath` block):
 
-```
+```text
 .PARAMETER AuditRulesXmlPath
     Pipeline-bound (by property name) audit rules path from
     New-DefenderDcPolicy. Used when -Mode Audit and no explicit -RulesXmlPath.
@@ -1590,7 +1601,7 @@ Add comment-based help for the two new parameters (after the `.PARAMETER RulesXm
 
 And add an example to the help:
 
-```
+```text
 .EXAMPLE
     New-DefenderDcPolicy -Usb ReadOnly -OutputPath .\policy\ | Set-DefenderDcPolicy -Mode Audit
 
@@ -1611,9 +1622,10 @@ git commit -m "feat: Set-DefenderDcPolicy accepts New-DefenderDcPolicy pipeline 
 
 ---
 
-### Task 9: Module manifest, exported-surface tests, version, changelog
+## Task 9: Module manifest, exported-surface tests, version, changelog
 
 **Files:**
+
 - Modify: `src/DefenderDeviceControlUnmanaged/DefenderDeviceControlUnmanaged.psd1`
 - Modify: `src/Tests/Unit/ExportedFunctions.Tests.ps1`
 - Modify: `CHANGELOG.md`
@@ -1687,6 +1699,7 @@ In `DefenderDeviceControlUnmanaged.psd1`:
 ## [1.1.0] - unreleased
 
 ### Added
+
 - `New-DefenderDcPolicy`: craft custom Device Control policy XML from per-class
   restriction flags (`-Usb ReadOnly,DenyExecute`, `-Wpd ReadOnly`,
   `-Optical Block`, `Allow`) with approved-device exceptions
@@ -1716,9 +1729,10 @@ git commit -m "feat: export New-DefenderDcPolicy and Get-DefenderDcDevice, bump 
 
 ---
 
-### Task 10: Examples, docs pages, nav
+## Task 10: Examples, docs pages, nav
 
 **Files:**
+
 - Create: `src/DefenderDeviceControlUnmanaged/examples/Capture-Approved-Devices.ps1`
 - Create: `src/DefenderDeviceControlUnmanaged/examples/Craft-Custom-Policy.ps1`
 - Create: `docs/docs/howto/craft-custom-policies.md`
@@ -1752,7 +1766,7 @@ Test-DefenderDcPolicy -ExpectMode Audit
 
 - [ ] **Step 2: Write `docs/docs/howto/craft-custom-policies.md`**
 
-```markdown
+````markdown
 # Craft custom policies
 
 Build a Device Control policy from parameters instead of hand-editing XML,
@@ -1765,6 +1779,7 @@ No elevation needed — these are read-only PnP queries.
 ```powershell
 Get-DefenderDcDevice -Watch -OutFile .\approved.json
 ```
+````
 
 Plug each approved device in; every arrival prints its identifiers
 (`InstancePathId`, `HardwareIds`, VID/PID, serial) and appends to
@@ -1780,12 +1795,12 @@ New-DefenderDcPolicy -Usb ReadOnly,DenyExecute -Wpd ReadOnly -Optical Block `
 
 Restriction flags per class (`-Usb`, `-Wpd`, `-Optical`):
 
-| Flag | Effect |
-|---|---|
-| `ReadOnly` | Deny write |
-| `DenyExecute` | Deny execute (combinable with `ReadOnly`) |
-| `Block` | Deny read+write+execute (exclusive) |
-| `Allow` | No restriction, audit visibility only (exclusive) |
+| Flag          | Effect                                            |
+| ------------- | ------------------------------------------------- |
+| `ReadOnly`    | Deny write                                        |
+| `DenyExecute` | Deny execute (combinable with `ReadOnly`)         |
+| `Block`       | Deny read+write+execute (exclusive)               |
+| `Allow`       | No restriction, audit visibility only (exclusive) |
 
 This writes the same three-file shape the module ships — `PolicyGroups.xml`,
 `PolicyRules.Audit.xml`, `PolicyRules.Enforce.xml` — so switching from audit
@@ -1794,7 +1809,7 @@ to enforce later is a one-flag change. Approved devices land in an
 they keep full access.
 
 GUIDs are deterministic: regenerate the same policy and the XML is
-byte-identical (clean git diffs).
+byte-identical (clean Git diffs).
 
 ## 3. Apply it
 
@@ -1813,12 +1828,13 @@ Validate first without applying: `Test-DefenderDcPolicyXml -Path .\policy\Policy
 ## Matching semantics
 
 - Devices captured by `Get-DefenderDcDevice` are exempted by
-  **InstancePathId** — serial-specific, approves *that* stick.
+  **InstancePathId** — serial-specific, approves _that_ stick.
 - Strings passed to `-AllowHardwareId` become **HardwareId** descriptors —
   model-wide, approves every device of that model.
-```
 
-- [ ] **Step 3: Write the two cmdlet reference pages** (platyPS layout, matching `docs/docs/reference/cmdlets/Get-DefenderDcPolicy.md`: H1 name, `## SYNOPSIS`, `## SYNTAX` fenced block, `## DESCRIPTION`, `## EXAMPLES` with `### EXAMPLE n`, `## PARAMETERS` with per-parameter yaml blocks, `## INPUTS`/`## OUTPUTS`/`## NOTES`/`## RELATED LINKS`). Derive SYNOPSIS/DESCRIPTION/EXAMPLES verbatim from the comment-based help written in Tasks 3 and 6; document every parameter (`-Usb`, `-Wpd`, `-Optical`, `-AllowHardwareId`, `-AllowDevice`, `-AllowDeviceFile`, `-OutputPath`, `-PolicyName` / `-Watch`, `-TimeoutSeconds`, `-OutFile`) with Type, Required, Default value, and Accept pipeline input flags consistent with the implementations.
+- [ ] **Step 3: Write the two cmdlet reference pages** (platyPS layout, matching `docs/docs/reference/cmdlets/Get-DefenderDcPolicy.md`: H1 name, `## SYNOPSIS`, `## SYNTAX` fenced block, `## DESCRIPTION`, `## EXAMPLES` with `### EXAMPLE n`, `## PARAMETERS` with per-parameter YAML blocks, `## INPUTS`/`## OUTPUTS`/`## NOTES`/`## RELATED LINKS`).
+      Derive SYNOPSIS/DESCRIPTION/EXAMPLES verbatim from the comment-based help written in Tasks 3 and 6; document every parameter
+      (`-Usb`, `-Wpd`, `-Optical`, `-AllowHardwareId`, `-AllowDevice`, `-AllowDeviceFile`, `-OutputPath`, `-PolicyName` / `-Watch`, `-TimeoutSeconds`, `-OutFile`) with Type, Required, Default value, and Accept pipeline input flags consistent with the implementations.
 
 - [ ] **Step 4: Add nav entries in `docs/zensical.toml`**
 
@@ -1857,6 +1873,6 @@ git commit -m "docs: custom policy crafting guide, cmdlet references, examples"
 - [ ] `pwsh -NoProfile -Command "Invoke-Pester -Path src/Tests/Unit -Output Detailed"` — all green.
 - [ ] `Import-Module ./src/DefenderDeviceControlUnmanaged/DefenderDeviceControlUnmanaged.psd1 -Force; Get-Command -Module DefenderDeviceControlUnmanaged` — 8 cmdlets.
 - [ ] Smoke the builder end-to-end locally (works on macOS):
-  `New-DefenderDcPolicy -Usb ReadOnly,DenyExecute -Wpd ReadOnly -Optical Block -AllowHardwareId 'USBSTOR\DiskKingston' -OutputPath /tmp/ddcu-smoke -Verbose` then eyeball the three XMLs against the starter files' shape.
+      `New-DefenderDcPolicy -Usb ReadOnly,DenyExecute -Wpd ReadOnly -Optical Block -AllowHardwareId 'USBSTOR\DiskKingston' -OutputPath /tmp/ddcu-smoke -Verbose` then eyeball the three XMLs against the starter files' shape.
 - [ ] On a Windows box (manual, post-merge): `Get-DefenderDcDevice -Watch -OutFile approved.json`, plug a stick in, confirm capture; `New-DefenderDcPolicy ... | Set-DefenderDcPolicy -Mode Audit -WhatIf` previews cleanly; `Test-DefenderDcPolicyXml` passes on generated files including MpCmdRun engine validation.
 - [ ] CI (Pester 5.1 + 7.x, super-linter) green on the PR.

@@ -1,0 +1,6 @@
+[codespell]
+# "SER" appears in USB device-ID examples (e.g. USBSTOR\DISK...\SER&0);
+# it is a device-ID token, not a misspelling of "SET".
+# "afterall" is the Pester DSL block keyword `AfterAll` (paired with BeforeAll),
+# not a misspelling of "after all".
+ignore-words-list = ser,afterall
