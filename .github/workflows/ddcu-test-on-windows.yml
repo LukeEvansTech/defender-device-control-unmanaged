@@ -32,8 +32,10 @@ jobs:
         run: |
           Import-Module ./src/DefenderDeviceControlUnmanaged/DefenderDeviceControlUnmanaged.psd1 -Force
           $cmds = Get-Command -Module DefenderDeviceControlUnmanaged
-          if ($cmds.Count -ne 6) {
-            throw "Expected 6 exported cmdlets, got $($cmds.Count): $($cmds.Name -join ', ')"
+          $manifest = Import-PowerShellDataFile ./src/DefenderDeviceControlUnmanaged/DefenderDeviceControlUnmanaged.psd1
+          $expected = @($manifest.FunctionsToExport).Count
+          if ($cmds.Count -ne $expected) {
+            throw "Expected $expected exported cmdlets (per manifest), got $($cmds.Count): $($cmds.Name -join ', ')"
           }
           $cmds | Format-Table Name, CommandType -AutoSize
 
@@ -96,8 +98,10 @@ jobs:
         run: |
           Import-Module ./src/DefenderDeviceControlUnmanaged/DefenderDeviceControlUnmanaged.psd1 -Force
           $cmds = Get-Command -Module DefenderDeviceControlUnmanaged
-          if ($cmds.Count -ne 6) {
-            throw "Expected 6 exported cmdlets, got $($cmds.Count): $($cmds.Name -join ', ')"
+          $manifest = Import-PowerShellDataFile ./src/DefenderDeviceControlUnmanaged/DefenderDeviceControlUnmanaged.psd1
+          $expected = @($manifest.FunctionsToExport).Count
+          if ($cmds.Count -ne $expected) {
+            throw "Expected $expected exported cmdlets (per manifest), got $($cmds.Count): $($cmds.Name -join ', ')"
           }
           $cmds | Format-Table Name, CommandType -AutoSize
 
