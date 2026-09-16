@@ -1,0 +1,3 @@
+[codespell]
+skip = ./.git,./docs/site,./docs/.cache,./docs/superpowers
+ignore-words-list = afterall,ser

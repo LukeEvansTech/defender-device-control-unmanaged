@@ -8,16 +8,18 @@ AfterAll {
 }
 
 Describe 'Exported functions surface' {
-    It 'exports exactly 6 cmdlets' {
+    It 'exports exactly 8 cmdlets' {
         $cmds = Get-Command -Module DefenderDeviceControlUnmanaged
-        $cmds.Count | Should -Be 6
+        $cmds.Count | Should -Be 8
     }
 
-    It 'exports the canonical 6 cmdlet names' {
+    It 'exports the canonical 8 cmdlet names' {
         $expected = @(
+            'Get-DefenderDcDevice',
             'Get-DefenderDcPolicy',
             'Invoke-DefenderDcOnboarding',
             'Invoke-DefenderDcUsbTest',
+            'New-DefenderDcPolicy',
             'Set-DefenderDcPolicy',
             'Test-DefenderDcPolicy',
             'Test-DefenderDcPolicyXml'
@@ -36,6 +38,12 @@ Describe 'Exported functions surface' {
         $cmds.Name | Should -Not -Contain 'Get-DcMpCmdRunPath'
         $cmds.Name | Should -Not -Contain 'Test-DcIsElevated'
         $cmds.Name | Should -Not -Contain 'Get-DcComputerStatus'
+        $cmds.Name | Should -Not -Contain 'New-DcDeterministicGuid'
+        $cmds.Name | Should -Not -Contain 'ConvertTo-DcPolicyXml'
+        $cmds.Name | Should -Not -Contain 'ConvertTo-DcDevice'
+        $cmds.Name | Should -Not -Contain 'Get-DcPnpEntity'
+        $cmds.Name | Should -Not -Contain 'Add-DcDeviceRecord'
+        $cmds.Name | Should -Not -Contain 'Test-DcIsWindows'
     }
 
     It 'every exported cmdlet has comment-based help with SYNOPSIS and EXAMPLES' {
