@@ -5,7 +5,7 @@ on:
   push:
     branches: [main]
   schedule:
-    - cron: '0 6 * * 1'
+    - cron: "0 6 * * 1"
   workflow_dispatch:
 
 permissions:
@@ -16,7 +16,7 @@ jobs:
     permissions:
       contents: read
       security-events: write
-    uses: LukeEvansTech/shared-workflows/.github/workflows/security-scans.yml@3771e1f9da1b3f6132eec9d63aacc0acb74660bc # v1
+    uses: LukeEvansTech/shared-workflows/.github/workflows/security-scans.yml@4f77b1856421438fefe16f69ed4dd682a445f7b1 # v1
     with:
       checkov-frameworks: github_actions
       trivy-scanners: vuln,secret,misconfig
