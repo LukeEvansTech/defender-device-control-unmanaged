@@ -27,6 +27,14 @@ function Set-DefenderDcPolicy {
     Optional absolute path to a PolicyRules.<Mode>.xml. Defaults to the
     shipped starter XML matching the selected -Mode.
 
+.PARAMETER AuditRulesXmlPath
+    Pipeline-bound (by property name) audit rules path from
+    New-DefenderDcPolicy. Used when -Mode Audit and no explicit -RulesXmlPath.
+
+.PARAMETER EnforceRulesXmlPath
+    Pipeline-bound (by property name) enforce rules path from
+    New-DefenderDcPolicy. Used when -Mode Enforce and no explicit -RulesXmlPath.
+
 .PARAMETER SkipMpCmdRunValidation
     Skip the engine-side XML preflight via MpCmdRun.exe -DeviceControl
     -TestPolicyXml. Off by default - validation recommended.
@@ -57,18 +65,36 @@ function Set-DefenderDcPolicy {
 
     Remove the policy entirely.
 
+.EXAMPLE
+    New-DefenderDcPolicy -Usb ReadOnly -OutputPath .\policy\ | Set-DefenderDcPolicy -Mode Audit
+
+    Craft and apply a custom policy in one pipeline.
+
+.INPUTS
+    PSCustomObject. An object with GroupsXmlPath, AuditRulesXmlPath, and/or
+    EnforceRulesXmlPath string properties, as emitted by New-DefenderDcPolicy.
+
 .LINK
     https://lukeevanstech.github.io/defender-device-control-unmanaged/
 #>
+    [Diagnostics.CodeAnalysis.SuppressMessageAttribute('PSUseProcessBlockForPipelineCommand', '',
+        Justification = 'Accepts one pipeline-bound PolicyFiles object and consumes its bound properties once.')]
     [CmdletBinding(SupportsShouldProcess = $true)]
     param(
         [Parameter(Mandatory)]
         [ValidateSet('Audit','Enforce','Off')]
         [string] $Mode,
 
+        [Parameter(ValueFromPipelineByPropertyName)]
         [string] $GroupsXmlPath,
 
         [string] $RulesXmlPath,
+
+        [Parameter(ValueFromPipelineByPropertyName)]
+        [string] $AuditRulesXmlPath,
+
+        [Parameter(ValueFromPipelineByPropertyName)]
+        [string] $EnforceRulesXmlPath,
 
         [switch] $SkipMpCmdRunValidation,
 
@@ -109,6 +135,15 @@ function Set-DefenderDcPolicy {
             return
         }
 
+        # Pipeline support: New-DefenderDcPolicy emits one PolicyFiles object
+        # with both rules paths; -Mode picks the right one. Explicit
+        # -RulesXmlPath always wins. (Single piped object, so the implicit
+        # end-block body sees its bound properties - no process block needed.)
+        if (-not $RulesXmlPath) {
+            if ($Mode -eq 'Audit' -and $AuditRulesXmlPath)     { $RulesXmlPath = $AuditRulesXmlPath }
+            if ($Mode -eq 'Enforce' -and $EnforceRulesXmlPath) { $RulesXmlPath = $EnforceRulesXmlPath }
+        }
+
         $defaultPolicyDir = Join-Path $PSScriptRoot '..\policy'
         if (-not $GroupsXmlPath) { $GroupsXmlPath = Join-Path $defaultPolicyDir 'PolicyGroups.xml' }
         if (-not $RulesXmlPath)  { $RulesXmlPath  = Join-Path $defaultPolicyDir "PolicyRules.$Mode.xml" }
@@ -135,13 +170,13 @@ function Set-DefenderDcPolicy {
             throw "Set-DefenderDcPolicy: RulesXmlPath failed validation: $RulesXmlPath"
         }
 
-        $manifest = Get-DcRegistryManifest -GroupsXmlPath $GroupsXmlPath -RulesXmlPath $RulesXmlPath
+        $manifest = @(Get-DcRegistryManifest -GroupsXmlPath $GroupsXmlPath -RulesXmlPath $RulesXmlPath)
 
         if ($PSCmdlet.ShouldProcess('Device Control policy registry', "Apply $Mode policy state")) {
             Write-Verbose "Removing any prior Device Control policy state before re-applying."
             Remove-DcPolicy
 
-            Invoke-DcRegistryWrites -Manifest $manifest
+            if ($manifest.Count -gt 0) { Invoke-DcRegistryWrites -Manifest $manifest }
 
             if (-not $SkipGpUpdate -and $PSCmdlet.ShouldProcess('Group Policy', 'gpupdate /force')) {
                 & gpupdate.exe /force 2>&1 | ForEach-Object { Write-Verbose "  $_" }
@@ -156,7 +191,7 @@ function Set-DefenderDcPolicy {
         # Stop-Transcript throws "host is not currently transcribing" under -WhatIf
         # (Start-Transcript honors $WhatIfPreference and becomes a no-op). The
         # finally block must clean up regardless; swallow the benign case.
-        try { Stop-Transcript | Out-Null } catch { }
+        try { Stop-Transcript | Out-Null } catch { Write-Debug "Stop-Transcript skipped: $($_.Exception.Message)" }
         Write-Verbose "Set-DefenderDcPolicy transcript: $transcript"
     }
 }
