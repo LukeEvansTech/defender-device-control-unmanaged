@@ -69,4 +69,26 @@ Describe 'Read-DcPolicyXml' {
         # The Enforce starter must contain at least one Deny across all rules.
         ($items | ForEach-Object { $_.EntryTypes }) -contains 'Deny' | Should -BeTrue
     }
+
+    It 'returns empty (no throw) for an empty PolicyRules root element' {
+        $tmp = New-TemporaryFile
+        [System.IO.File]::WriteAllText($tmp.FullName, '<PolicyRules></PolicyRules>', [System.Text.UTF8Encoding]::new($false))
+        try {
+            { Read-DcPolicyXml -Path $tmp.FullName } | Should -Not -Throw
+            $items = Read-DcPolicyXml -Path $tmp.FullName
+            @($items).Count | Should -Be 0
+        }
+        finally { Remove-Item $tmp.FullName -Force }
+    }
+
+    It 'returns empty (no throw) for an empty Groups root element' {
+        $tmp = New-TemporaryFile
+        [System.IO.File]::WriteAllText($tmp.FullName, '<Groups></Groups>', [System.Text.UTF8Encoding]::new($false))
+        try {
+            { Read-DcPolicyXml -Path $tmp.FullName } | Should -Not -Throw
+            $items = Read-DcPolicyXml -Path $tmp.FullName
+            @($items).Count | Should -Be 0
+        }
+        finally { Remove-Item $tmp.FullName -Force }
+    }
 }

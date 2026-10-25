@@ -16,10 +16,10 @@ function Read-DcPolicyXml {
 
     if ($rootName -eq 'Groups') {
         $kind = 'Group'
-        $nodes = @($doc.Groups.Group)
+        $nodes = @($doc.DocumentElement.SelectNodes('Group'))
     } elseif ($rootName -eq 'PolicyRules') {
         $kind = 'Rule'
-        $nodes = @($doc.PolicyRules.PolicyRule)
+        $nodes = @($doc.DocumentElement.SelectNodes('PolicyRule'))
     } else {
         throw "Read-DcPolicyXml: $Path does not contain <Groups> or <PolicyRules> as the document element."
     }
