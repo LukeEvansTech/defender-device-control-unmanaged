@@ -43,6 +43,7 @@ nav = [
   ] },
   { "How-to" = [
     { "Extend device categories" = "howto/extend-device-categories.md" },
+    { "Craft custom policies" = "howto/craft-custom-policies.md" },
     { "Validate custom XML" = "howto/validate-custom-xml.md" },
     { "Onboard to MDE" = "howto/onboard-to-mde.md" },
     { "Run end-to-end test" = "howto/run-end-to-end-test.md" },
@@ -51,6 +52,8 @@ nav = [
   { "Reference" = [
     { "Cmdlets" = [
       { "Set-DefenderDcPolicy" = "reference/cmdlets/Set-DefenderDcPolicy.md" },
+      { "New-DefenderDcPolicy" = "reference/cmdlets/New-DefenderDcPolicy.md" },
+      { "Get-DefenderDcDevice" = "reference/cmdlets/Get-DefenderDcDevice.md" },
       { "Get-DefenderDcPolicy" = "reference/cmdlets/Get-DefenderDcPolicy.md" },
       { "Test-DefenderDcPolicy" = "reference/cmdlets/Test-DefenderDcPolicy.md" },
       { "Test-DefenderDcPolicyXml" = "reference/cmdlets/Test-DefenderDcPolicyXml.md" },
