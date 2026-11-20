@@ -19,3 +19,4 @@ jobs:
     uses: LukeEvansTech/shared-workflows/.github/workflows/super-linter.yml@89cad0963c5ba9e692f5d214d81551bb65e821df # v1
     with:
       soft-launch: false
+      filter-regex-exclude: '(^|/)(vendor|node_modules|\.terraform|\.venv|dist|build|collections)/|(^|/)docs/superpowers/'
